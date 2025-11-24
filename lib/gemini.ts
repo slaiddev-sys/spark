@@ -57,8 +57,8 @@ export const loadTrainingDesigns = (): { name: string; data: string; mimeType: s
 }
 
 // Get Gemini model for reasoning and UI generation
-// Using Gemini 1.5 Pro as the stable high-quality model
 export const getGeminiModel = () => {
+  // using gemini-1.5-pro as it is the current stable pro model
   return genAI.getGenerativeModel({ 
     model: 'gemini-1.5-pro', 
     generationConfig: {
