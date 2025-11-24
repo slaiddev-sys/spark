@@ -24,10 +24,20 @@ export async function POST(request: NextRequest) {
     const userId = user.id
     console.log('Deleting account for user:', userId)
 
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!serviceRoleKey) {
+      console.error('CRITICAL: SUPABASE_SERVICE_ROLE_KEY is missing from environment variables.')
+      return NextResponse.json(
+        { error: 'Server configuration error: Missing admin key. Please verify Vercel environment variables.' },
+        { status: 500 }
+      )
+    }
+
     // Create admin client for deletion (requires SUPABASE_SERVICE_ROLE_KEY)
     const supabaseAdmin = createClient(
       supabaseUrl,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      serviceRoleKey,
       {
         auth: {
           autoRefreshToken: false,
