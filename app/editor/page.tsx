@@ -46,17 +46,19 @@ export default function EditorPage() {
   const [user, setUser] = useState<any>(null)
   const [projects, setProjects] = useState<any[]>([])
   const [currentProject, setCurrentProject] = useState<any>(null)
+  const [autoResumeData, setAutoResumeData] = useState<{message: string, image?: string} | null>(null)
   const supabase = createClient()
   const router = useRouter()
 
-  // Auto-resume generation after upgrade
+  // Check for auto-resume on mount/user change
   useEffect(() => {
     if (typeof window === 'undefined') return
+    if (!user) return
     
     const urlParams = new URLSearchParams(window.location.search)
     const upgraded = urlParams.get('upgraded')
     
-    if (upgraded === 'true' && user && (user.credits || 0) >= 5) {
+    if (upgraded === 'true' && (user.credits || 0) >= 5) {
       const pendingGen = localStorage.getItem('pendingGeneration')
       
       if (pendingGen) {
@@ -79,26 +81,38 @@ export default function EditorPage() {
               type: 'normal'
             }])
             
-            // Auto-resume generation after a short delay
-            setTimeout(() => {
-              handleSendMessage(message, image)
-            }, 1000)
+            // Set data for auto-resume
+            setAutoResumeData({ message, image })
           } else {
             // Request too old, just clear it
             localStorage.removeItem('pendingGeneration')
+            window.history.replaceState({}, '', '/editor')
           }
         } catch (err) {
           console.error('Error parsing pending generation:', err)
           localStorage.removeItem('pendingGeneration')
+          window.history.replaceState({}, '', '/editor')
         }
-      }
-      
-      // Remove upgraded param even if no pending generation
-      if (window.location.search.includes('upgraded=true')) {
+      } else {
+        // No pending generation, just remove the param
         window.history.replaceState({}, '', '/editor')
       }
     }
   }, [user])
+
+  // Trigger auto-resume when data is set
+  useEffect(() => {
+    if (autoResumeData && user && (user.credits || 0) >= 5 && !isLoading) {
+      const timer = setTimeout(() => {
+        const { message, image } = autoResumeData
+        setAutoResumeData(null)
+        handleSendMessage(message, image)
+      }, 1500)
+      
+      return () => clearTimeout(timer)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoResumeData, user, isLoading])
 
   const fetchUserData = async () => {
     const { data: { session } } = await supabase.auth.getSession()
