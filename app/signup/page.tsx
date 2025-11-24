@@ -81,7 +81,7 @@ function SignUpForm() {
       </div>
 
       {/* Sign Up Form */}
-      <div className="relative z-10 w-full max-w-md px-6 py-12">
+      <div className="relative z-10 w-full max-w-md px-4 md:px-6 py-8 md:py-12">
         <div className="text-center mb-8">
           {/* Logo */}
           <Link href="/" className="inline-flex items-center space-x-2 mb-8 hover:opacity-80 transition-opacity">
@@ -94,10 +94,10 @@ function SignUpForm() {
             />
           </Link>
 
-          <h1 className="text-4xl font-semibold text-white mb-3">
+          <h1 className="text-3xl md:text-4xl font-semibold text-white mb-3">
             Design your app today
           </h1>
-          <p className="text-gray-400">
+          <p className="text-sm md:text-base text-gray-400">
             Create an account to start using Spark.
           </p>
         </div>

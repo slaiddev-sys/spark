@@ -17,23 +17,23 @@ export default function ExampleShowcase() {
   ]
 
   return (
-    <section className="pt-0 pb-20 px-6">
+    <section className="pt-0 pb-12 md:pb-20 px-4 md:px-6">
       <div className="max-w-7xl mx-auto">
-        <h2 className="text-3xl md:text-4xl font-medium text-white mb-12 text-center">
+        <h2 className="text-2xl md:text-3xl lg:text-4xl font-medium text-white mb-8 md:mb-12 text-center">
           Example Apps Built with Spark
         </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
           {examples.map((example, idx) => (
             <div 
               key={idx}
-              className="bg-[#0a0b0f] border border-gray-800 rounded-2xl p-6 hover:border-gray-700 transition-all"
+              className="bg-[#0a0b0f] border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6 hover:border-gray-700 transition-all"
             >
-              <h3 className="text-xl font-semibold text-white mb-6">
+              <h3 className="text-lg md:text-xl font-semibold text-white mb-4 md:mb-6">
                 {example.title}
               </h3>
               
-              <div className="relative w-full h-[400px] rounded-xl overflow-hidden">
+              <div className="relative w-full h-[300px] md:h-[400px] rounded-lg md:rounded-xl overflow-hidden">
                 <Image
                   src={example.image}
                   alt={example.title}

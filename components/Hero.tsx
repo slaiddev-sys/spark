@@ -39,10 +39,10 @@ export default function Hero() {
   }
 
   return (
-    <section className="pt-32 pb-20 px-6">
+    <section className="pt-24 md:pt-32 pb-12 md:pb-20 px-4 md:px-6">
       <div className="max-w-4xl mx-auto text-center">
         {/* Badge */}
-        <div className="inline-flex items-center space-x-2 bg-gray-800/50 border border-gray-700 rounded-full px-4 py-2 mb-12">
+        <div className="inline-flex items-center space-x-2 bg-gray-800/50 border border-gray-700 rounded-full px-3 md:px-4 py-2 mb-8 md:mb-12">
           <div className="flex -space-x-2">
             <Image 
               src="/Persona 1.jpg" 
@@ -70,10 +70,10 @@ export default function Hero() {
         </div>
 
         {/* Main Heading */}
-        <h1 className="text-4xl md:text-6xl font-medium text-white mb-4 tracking-tight whitespace-nowrap">
+        <h1 className="text-3xl sm:text-4xl md:text-6xl font-medium text-white mb-3 md:mb-4 tracking-tight">
           Design Apps and Software
         </h1>
-        <h2 className="text-4xl md:text-6xl font-medium mb-8 flex items-center justify-center gap-3 tracking-tight">
+        <h2 className="text-3xl sm:text-4xl md:text-6xl font-medium mb-6 md:mb-8 flex items-center justify-center gap-2 md:gap-3 tracking-tight">
           <span className="bg-gradient-to-r from-[#0061e8] to-[#039fef] bg-clip-text text-transparent">
             in seconds
           </span>
@@ -87,13 +87,13 @@ export default function Hero() {
         </h2>
 
         {/* Subheading */}
-        <p className="text-xl text-gray-400 mb-12">
+        <p className="text-base md:text-xl text-gray-400 mb-8 md:mb-12 px-4">
           Go from idea to beautiful mockups in minutes by chatting with AI.
         </p>
 
         {/* Input Box */}
-        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
-          <div className="bg-[#0a0b0f] border border-[#2a3447] rounded-3xl p-5 hover:border-[#3a4557] transition-all shadow-2xl relative z-10">
+        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto px-2">
+          <div className="bg-[#0a0b0f] border border-[#2a3447] rounded-2xl md:rounded-3xl p-4 md:p-5 hover:border-[#3a4557] transition-all shadow-2xl relative z-10">
             <textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}

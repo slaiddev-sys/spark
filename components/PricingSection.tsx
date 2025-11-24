@@ -134,14 +134,14 @@ export default function PricingSection() {
   }
 
   return (
-    <section className="pt-32 pb-20 px-6">
+    <section className="pt-24 md:pt-32 pb-12 md:pb-20 px-4 md:px-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="text-5xl md:text-6xl font-medium text-white mb-4 tracking-tight">
+        <div className="text-center mb-12 md:mb-16">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-medium text-white mb-3 md:mb-4 tracking-tight px-4">
             Transparent pricing for everyone
           </h1>
-          <p className="text-xl text-gray-400 mb-8">
+          <p className="text-base md:text-xl text-gray-400 mb-6 md:mb-8 px-4">
             A fraction of the cost and time of hiring designers or doing it yourself from scratch.
           </p>
 
@@ -149,7 +149,7 @@ export default function PricingSection() {
           <div className="inline-flex items-center bg-gray-800/50 border border-gray-700 rounded-full p-1">
             <button
               onClick={() => setBillingCycle('monthly')}
-              className={`px-6 py-2 rounded-full transition-colors ${
+              className={`px-4 md:px-6 py-2 rounded-full transition-colors text-sm md:text-base ${
                 billingCycle === 'monthly'
                   ? 'bg-gray-700 text-white'
                   : 'text-gray-400 hover:text-white'
@@ -159,14 +159,14 @@ export default function PricingSection() {
             </button>
             <button
               onClick={() => setBillingCycle('yearly')}
-              className={`px-6 py-2 rounded-full transition-colors ${
+              className={`px-4 md:px-6 py-2 rounded-full transition-colors text-sm md:text-base ${
                 billingCycle === 'yearly'
                   ? 'bg-gray-700 text-white'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
               Yearly
-              <span className="ml-2 text-xs bg-[#0061e8] text-white px-2 py-1 rounded-full">
+              <span className="ml-1 md:ml-2 text-xs bg-[#0061e8] text-white px-2 py-1 rounded-full">
                 4 months free
               </span>
             </button>
