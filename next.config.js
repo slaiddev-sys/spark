@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  trailingSlash: false, // Prevent trailing slash redirects for webhooks
   images: {
     domains: ['images.unsplash.com'], // Allow Unsplash images
   },

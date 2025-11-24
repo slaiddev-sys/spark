@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
+// Simple GET handler for testing webhook endpoint accessibility
+export async function GET() {
+  return NextResponse.json({ 
+    status: 'Webhook endpoint is live',
+    timestamp: new Date().toISOString()
+  })
+}
+
 // Map Polar Product IDs to Plan Details
 const PLAN_MAP: Record<string, { tier: string; credits: number }> = {
   // Starter
