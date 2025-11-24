@@ -1,28 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 
 export async function POST(request: NextRequest) {
   try {
-    // Create a Supabase client with the user's session
-    const cookieStore = cookies()
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     
-    // Get session token from cookies
-    const authToken = cookieStore.get('sb-access-token')?.value || cookieStore.get('sb-refresh-token')?.value
-    
-    // Client to verify user
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: false
-      }
-    })
+    // Create a Supabase client with the user's session using Auth Helpers
+    const supabase = createServerComponentClient({ cookies })
 
-    // Get the current user from the request
-    const { data: { user }, error: userError } = await supabase.auth.getUser(authToken)
+    // Get the current user from the session
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {
+      console.error('Auth error:', userError)
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
@@ -30,6 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = user.id
+    console.log('Deleting account for user:', userId)
 
     // Create admin client for deletion (requires SUPABASE_SERVICE_ROLE_KEY)
     const supabaseAdmin = createClient(
