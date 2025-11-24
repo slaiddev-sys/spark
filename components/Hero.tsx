@@ -51,7 +51,7 @@ export default function Hero() {
         </h1>
         <h2 className="text-4xl md:text-6xl font-medium mb-8 flex items-center justify-center gap-3 tracking-tight">
           <span className="bg-gradient-to-r from-[#0061e8] to-[#039fef] bg-clip-text text-transparent">
-            in minutes
+            in seconds
           </span>
           <Image 
             src="/Novix Favicon.png" 
