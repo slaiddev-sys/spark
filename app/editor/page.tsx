@@ -619,9 +619,9 @@ export default function EditorPage() {
     } catch (error: any) {
       console.error('Error sending message:', error)
       
-      let errorMessage = '❌ Sorry, I encountered an error. Please make sure your Gemini API key is configured correctly in .env.local'
+      let errorMessage = error.message || 'An unexpected error occurred.'
       
-      if (error.message === 'Insufficient credits') {
+      if (errorMessage === 'Insufficient credits') {
         errorMessage = '⚠️ Insufficient credits, Upgrade to get more credits'
         // Remove status message
         setMessages(prev => {
@@ -633,6 +633,11 @@ export default function EditorPage() {
              setFrames(prev => prev.filter(f => !generatedFrameIds.includes(f.id)))
         }
         return // Exit
+      }
+
+      // Generic fallback for other errors
+      if (!errorMessage || errorMessage === 'Failed to fetch' || errorMessage === 'Failed to get streaming response from AI') {
+         errorMessage = '❌ Error: Could not connect to AI service. Please check your API key configuration.'
       }
 
       setMessages(prev => [...prev, { 
