@@ -657,11 +657,10 @@ export default function EditorPage() {
           
           // Add 3 locked placeholder frames for free users (if not editing and free tier)
           if (!selectedFrameId && user?.tier === 'free' && framesToSave.length === 3) {
-            const realFrameIds = new Set(updatedFrames.filter(f => !f.locked).map(f => f.id))
             const lockedFrameIds = new Set(updatedFrames.filter(f => f.locked).map(f => f.id))
             
-            // Only add locked frames if we don't already have 3 locked frames
-            if (lockedFrameIds.size < 3) {
+            // Only add locked frames if we don't already have ANY locked frames
+            if (lockedFrameIds.size === 0) {
               for (let i = 0; i < 3; i++) {
                 const lockedId = `locked-${Date.now()}-${i}`
                 updatedFrames.push({
