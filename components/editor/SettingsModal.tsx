@@ -110,13 +110,22 @@ export default function SettingsModal({ isOpen, onClose, user }: SettingsModalPr
   const plan = getPlanDetails(user?.tier || 'free')
 
   const handleContactSupport = () => {
-    // Open Featurebase messenger widget
-    const win = window as any
-    if (win.Featurebase) {
-      win.Featurebase('open')
-    }
-    // Close the settings modal
+    // Close the settings modal first
     onClose()
+    
+    // Wait a bit for modal to close, then open Featurebase
+    setTimeout(() => {
+      const win = window as any
+      console.log('Attempting to open Featurebase...', typeof win.Featurebase)
+      
+      if (win.Featurebase && typeof win.Featurebase === 'function') {
+        win.Featurebase('open')
+        console.log('Featurebase opened successfully')
+      } else {
+        console.error('Featurebase not loaded. Make sure NEXT_PUBLIC_FEATUREBASE_APP_ID is set in Vercel.')
+        alert('Chat widget is not configured yet. Please contact support at: support@sparkuiapp.com')
+      }
+    }, 300)
   }
 
   return (
