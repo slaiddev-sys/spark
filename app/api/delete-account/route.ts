@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 
 export async function POST(request: NextRequest) {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     
     // Create a Supabase client with the user's session using Auth Helpers
-    const supabase = createServerComponentClient({ cookies })
+    const supabase = createRouteHandlerClient({ cookies })
 
     // Get the current user from the session
     const { data: { user }, error: userError } = await supabase.auth.getUser()
