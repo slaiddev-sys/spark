@@ -57,15 +57,15 @@ export const loadTrainingDesigns = (): { name: string; data: string; mimeType: s
 }
 
 // Get Gemini model for reasoning and UI generation
-// Using Gemini 2.0 Flash Thinking (Reasoning) as requested
+// Using Gemini 3.0 Pro Preview as requested
 export const getGeminiModel = () => {
   return genAI.getGenerativeModel({ 
-    model: 'gemini-2.0-flash-thinking-exp-01-21',
+    model: 'gemini-3.0-pro-preview',
     generationConfig: {
       temperature: 1.0,
       topK: 40,
       topP: 0.95,
-      maxOutputTokens: 64000, // Higher token limit for reasoning models
+      maxOutputTokens: 64000, // Higher token limit for reasoning
     },
   })
 }
@@ -73,7 +73,7 @@ export const getGeminiModel = () => {
 // Fallback model if primary is unavailable
 export const getFallbackModel = () => {
   return genAI.getGenerativeModel({ 
-    model: 'gemini-1.5-pro',
+    model: 'gemini-2.0-flash-exp',
     generationConfig: {
       temperature: 1.0,
       topK: 40,
