@@ -51,8 +51,9 @@ export async function POST(request: NextRequest) {
 
   console.log(`📦 Event type: ${event.type}`)
   
-  // Handle Subscription Created/Updated/Active
-  if (event.type === 'subscription.created' || event.type === 'subscription.updated' || event.type === 'subscription.active') {
+  // ONLY process subscription.created to avoid duplicate credit additions
+  // (Polar sends created, updated, AND active for the same subscription)
+  if (event.type === 'subscription.created') {
     const subscription = event.data
     const productId = subscription.product_id
     let userId = subscription.metadata?.userId
