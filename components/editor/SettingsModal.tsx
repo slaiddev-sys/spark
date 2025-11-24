@@ -15,6 +15,8 @@ export default function SettingsModal({ isOpen, onClose, user }: SettingsModalPr
   const supabase = createClient()
   const [isDeleting, setIsDeleting] = React.useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false)
+  const [showCancelConfirm, setShowCancelConfirm] = React.useState(false)
+  const [isCanceling, setIsCanceling] = React.useState(false)
 
   if (!isOpen) return null
 
@@ -22,6 +24,34 @@ export default function SettingsModal({ isOpen, onClose, user }: SettingsModalPr
     await supabase.auth.signOut()
     router.push('/login')
     router.refresh()
+  }
+
+  const handleCancelPlan = async () => {
+    setIsCanceling(true)
+    
+    try {
+      const response = await fetch('/api/cancel-subscription', {
+        method: 'POST',
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to cancel subscription')
+      }
+
+      // Close modal and refresh
+      setShowCancelConfirm(false)
+      router.refresh()
+      onClose()
+      
+      alert('Your subscription has been canceled. You can continue using your current plan until the end of the billing period.')
+    } catch (error: any) {
+      console.error('Error canceling subscription:', error)
+      alert(error.message || 'Failed to cancel subscription. Please try again.')
+    } finally {
+      setIsCanceling(false)
+    }
   }
 
   const handleDeleteAccount = async () => {
@@ -126,10 +156,21 @@ export default function SettingsModal({ isOpen, onClose, user }: SettingsModalPr
                  <p className="text-gray-400 text-sm">{plan.price}</p>
                  <p className="text-gray-500 text-xs mt-2">{plan.desc}</p>
               </div>
-              <div className="flex items-center space-x-3">
-                <button className="bg-[#1f2937] hover:bg-[#374151] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              <div className="flex flex-col space-y-2">
+                <button 
+                  onClick={() => router.push('/pricing')}
+                  className="bg-[#1f2937] hover:bg-[#374151] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
                   Change Plan
                 </button>
+                {user?.tier && user.tier !== 'free' && (
+                  <button
+                    onClick={() => setShowCancelConfirm(true)}
+                    className="text-gray-400 hover:text-red-400 text-xs text-left transition-colors"
+                  >
+                    Cancel plan
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -167,6 +208,34 @@ export default function SettingsModal({ isOpen, onClose, user }: SettingsModalPr
           </div>
         </div>
       </div>
+
+      {/* Cancel Subscription Confirmation Modal */}
+      {showCancelConfirm && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-[400px] bg-[#1a1b1e] rounded-xl border border-gray-800 shadow-2xl p-6" onClick={e => e.stopPropagation()}>
+            <h3 className="text-white font-bold text-lg mb-3">Cancel Subscription?</h3>
+            <p className="text-gray-400 text-sm mb-6">
+              Are you sure you want to cancel your subscription? You'll continue to have access until the end of your current billing period.
+            </p>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={handleCancelPlan}
+                disabled={isCanceling}
+                className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-red-800 disabled:cursor-not-allowed text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
+              >
+                {isCanceling ? 'Canceling...' : 'Yes, Cancel Plan'}
+              </button>
+              <button
+                onClick={() => setShowCancelConfirm(false)}
+                disabled={isCanceling}
+                className="flex-1 bg-[#1f2937] hover:bg-[#374151] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
+              >
+                Keep Plan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
