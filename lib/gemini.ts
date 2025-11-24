@@ -57,10 +57,10 @@ export const loadTrainingDesigns = (): { name: string; data: string; mimeType: s
 }
 
 // Get Gemini model for reasoning and UI generation
-// Using Gemini 3 Pro Preview as requested
+// Using Gemini 2.0 Flash as primary for speed and stability (3 Pro Preview is unstable)
 export const getGeminiModel = () => {
   return genAI.getGenerativeModel({ 
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-2.0-flash-exp',
     generationConfig: {
       temperature: 1.0,
       topK: 40,
@@ -70,7 +70,7 @@ export const getGeminiModel = () => {
   })
 }
 
-// Fallback model if Gemini 3 is unavailable
+// Fallback model if primary is unavailable
 export const getFallbackModel = () => {
   return genAI.getGenerativeModel({ 
     model: 'gemini-1.5-pro',
@@ -295,8 +295,14 @@ export async function generateUIWithGeminiStream(
       result = await chat.sendMessageStream(messageParts)
     } catch (error: any) {
        console.error('Error sending message stream:', error)
-       if (!chat || error.message?.includes('404') || error.message?.includes('not found') || error.message?.includes('Resource has been exhausted')) {
-          console.log('Attempting fallback to Gemini 1.5 Pro due to send error...')
+       
+       // Check for various error conditions to trigger fallback
+       const isOverloaded = error.message?.includes('503') || error.message?.includes('overloaded') || error.status === 503;
+       const isNotFound = error.message?.includes('404') || error.message?.includes('not found');
+       const isExhausted = error.message?.includes('Resource has been exhausted') || error.status === 429;
+
+       if (!chat || isNotFound || isExhausted || isOverloaded) {
+          console.log(`Attempting fallback to Gemini 1.5 Pro due to error: ${error.message}`)
           const fallbackModel = getFallbackModel()
           const fallbackChat = fallbackModel.startChat({
             history: [
