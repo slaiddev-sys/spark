@@ -13,6 +13,8 @@ interface SettingsModalProps {
 export default function SettingsModal({ isOpen, onClose, user }: SettingsModalProps) {
   const router = useRouter()
   const supabase = createClient()
+  const [isDeleting, setIsDeleting] = React.useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false)
 
   if (!isOpen) return null
 
@@ -20,6 +22,37 @@ export default function SettingsModal({ isOpen, onClose, user }: SettingsModalPr
     await supabase.auth.signOut()
     router.push('/login')
     router.refresh()
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!showDeleteConfirm) {
+      setShowDeleteConfirm(true)
+      return
+    }
+
+    setIsDeleting(true)
+    
+    try {
+      const response = await fetch('/api/delete-account', {
+        method: 'POST',
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete account')
+      }
+
+      // Sign out and redirect to home
+      await supabase.auth.signOut()
+      router.push('/')
+      router.refresh()
+    } catch (error: any) {
+      console.error('Error deleting account:', error)
+      alert(error.message || 'Failed to delete account. Please try again.')
+      setIsDeleting(false)
+      setShowDeleteConfirm(false)
+    }
   }
 
   const getInitials = (name: string) => {
@@ -31,25 +64,16 @@ export default function SettingsModal({ isOpen, onClose, user }: SettingsModalPr
       .slice(0, 2) || 'JD'
   }
 
-  const handleDeleteAccount = async () => {
-    if (window.confirm('Are you absolutely sure you want to delete your account? This action cannot be undone and will permanently delete all your projects, designs, and data.')) {
-      try {
-        const response = await fetch('/api/delete-account', {
-          method: 'POST',
-        })
-
-        if (response.ok) {
-          await supabase.auth.signOut()
-          router.push('/')
-          router.refresh()
-        } else {
-          const data = await response.json()
-          alert(`Failed to delete account: ${data.error}`)
-        }
-      } catch (error) {
-        console.error('Error deleting account:', error)
-        alert('An error occurred while deleting your account.')
-      }
+  const getPlanDetails = (tier: string) => {
+    switch (tier) {
+      case 'starter':
+        return { name: 'Starter Plan', price: '$14.99/month', desc: 'Perfect for hobbyists.' }
+      case 'pro':
+        return { name: 'Pro Plan', price: '$24.99/month', desc: 'For professional developers.' }
+      case 'ultimate':
+        return { name: 'Ultimate Plan', price: '$49.99/month', desc: 'For agencies and teams.' }
+      default:
+        return { name: 'Free Trial', price: 'Free', desc: 'Try Spark risk-free.' }
     }
   }
 
@@ -117,12 +141,28 @@ export default function SettingsModal({ isOpen, onClose, user }: SettingsModalPr
               <p className="text-gray-400 text-sm mb-4">
                 Once you delete your account, there is no going back. Please be certain.
               </p>
-              <button 
-                onClick={handleDeleteAccount}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-red-900/20"
-              >
-                Delete Account
-              </button>
+              {showDeleteConfirm && (
+                <p className="text-yellow-500 text-sm mb-4 font-medium">
+                  ⚠️ Are you absolutely sure? Click "Confirm Delete" again to permanently delete your account.
+                </p>
+              )}
+              <div className="flex items-center space-x-3">
+                <button 
+                  onClick={handleDeleteAccount}
+                  disabled={isDeleting}
+                  className="bg-red-600 hover:bg-red-700 disabled:bg-red-800 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-red-900/20"
+                >
+                  {isDeleting ? 'Deleting...' : showDeleteConfirm ? 'Confirm Delete' : 'Delete Account'}
+                </button>
+                {showDeleteConfirm && (
+                  <button 
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="bg-[#1f2937] hover:bg-[#374151] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

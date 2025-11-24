@@ -1,23 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
+import { cookies } from 'next/headers'
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
-    const { data: { session } } = await supabase.auth.getSession()
+    // Create a Supabase client with the user's session
+    const cookieStore = cookies()
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    
+    // Get session token from cookies
+    const authToken = cookieStore.get('sb-access-token')?.value || cookieStore.get('sb-refresh-token')?.value
+    
+    // Client to verify user
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: false
+      }
+    })
 
-    if (!session) {
+    // Get the current user from the request
+    const { data: { user }, error: userError } = await supabase.auth.getUser(authToken)
+    
+    if (userError || !user) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Not authenticated' },
         { status: 401 }
       )
     }
 
-    // Initialize Supabase Admin Client with Service Role Key
+    const userId = user.id
+
+    // Create admin client for deletion (requires SUPABASE_SERVICE_ROLE_KEY)
     const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      supabaseUrl,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
       {
         auth: {
@@ -27,34 +43,56 @@ export async function POST(request: NextRequest) {
       }
     )
 
-    const userId = session.user.id
-
-    // 1. Delete from public.profiles (if cascade delete isn't set up on auth.users -> profiles)
-    // Actually, best practice is to delete auth.users and let cascade handle the rest.
-    // But to be absolutely sure, we can delete public data first.
-    // Assuming CASCADE DELETE is set up on foreign keys:
-    // deleting auth.users should cascade to public.profiles, public.projects, etc.
+    // Delete user data in order (respecting foreign key constraints)
+    // 1. Delete frames (references projects)
+    const { error: framesError } = await supabaseAdmin
+      .from('frames')
+      .delete()
+      .eq('user_id', userId)
     
-    // Let's try deleting the user directly from Auth Admin.
-    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(
-      userId
-    )
+    if (framesError) console.error('Error deleting frames:', framesError)
 
-    if (deleteError) {
-      console.error('Error deleting user from Auth:', deleteError)
+    // 2. Delete messages (references projects)
+    const { error: messagesError } = await supabaseAdmin
+      .from('messages')
+      .delete()
+      .eq('user_id', userId)
+    
+    if (messagesError) console.error('Error deleting messages:', messagesError)
+
+    // 3. Delete projects
+    const { error: projectsError } = await supabaseAdmin
+      .from('projects')
+      .delete()
+      .eq('user_id', userId)
+    
+    if (projectsError) console.error('Error deleting projects:', projectsError)
+
+    // 4. Delete profile
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .delete()
+      .eq('id', userId)
+    
+    if (profileError) console.error('Error deleting profile:', profileError)
+
+    // 5. Delete the auth user (this removes Google OAuth links automatically)
+    const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(userId)
+    
+    if (deleteAuthError) {
+      console.error('Error deleting auth user:', deleteAuthError)
       return NextResponse.json(
-        { error: deleteError.message },
+        { error: 'Failed to delete authentication account' },
         { status: 500 }
       )
     }
 
-    // If successful, sign out the user session
     return NextResponse.json({ success: true })
 
   } catch (error: any) {
-    console.error('Error in delete-account API:', error)
+    console.error('Error deleting account:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: error.message || 'Failed to delete account' },
       { status: 500 }
     )
   }
