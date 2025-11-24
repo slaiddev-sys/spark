@@ -1,6 +1,5 @@
 import Navigation from '@/components/Navigation'
 import Hero from '@/components/Hero'
-import ExampleCards from '@/components/ExampleCards'
 import Footer from '@/components/Footer'
 import Image from 'next/image'
 
@@ -22,7 +21,6 @@ export default function Home() {
       <div className="relative z-10">
         <Navigation />
         <Hero />
-        <ExampleCards />
         <Footer />
       </div>
     </main>
