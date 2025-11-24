@@ -31,16 +31,25 @@ export default function SettingsModal({ isOpen, onClose, user }: SettingsModalPr
       .slice(0, 2) || 'JD'
   }
 
-  const getPlanDetails = (tier: string) => {
-    switch (tier) {
-      case 'starter':
-        return { name: 'Starter Plan', price: '$14.99/month', desc: 'Perfect for hobbyists.' }
-      case 'pro':
-        return { name: 'Pro Plan', price: '$24.99/month', desc: 'For professional developers.' }
-      case 'ultimate':
-        return { name: 'Ultimate Plan', price: '$49.99/month', desc: 'For agencies and teams.' }
-      default:
-        return { name: 'Free Trial', price: 'Free', desc: 'Try Spark risk-free.' }
+  const handleDeleteAccount = async () => {
+    if (window.confirm('Are you absolutely sure you want to delete your account? This action cannot be undone and will permanently delete all your projects, designs, and data.')) {
+      try {
+        const response = await fetch('/api/delete-account', {
+          method: 'POST',
+        })
+
+        if (response.ok) {
+          await supabase.auth.signOut()
+          router.push('/')
+          router.refresh()
+        } else {
+          const data = await response.json()
+          alert(`Failed to delete account: ${data.error}`)
+        }
+      } catch (error) {
+        console.error('Error deleting account:', error)
+        alert('An error occurred while deleting your account.')
+      }
     }
   }
 
@@ -108,7 +117,10 @@ export default function SettingsModal({ isOpen, onClose, user }: SettingsModalPr
               <p className="text-gray-400 text-sm mb-4">
                 Once you delete your account, there is no going back. Please be certain.
               </p>
-              <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-red-900/20">
+              <button 
+                onClick={handleDeleteAccount}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-red-900/20"
+              >
                 Delete Account
               </button>
             </div>
