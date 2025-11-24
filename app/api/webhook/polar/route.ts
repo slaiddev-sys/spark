@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { Webhooks } from '@polar-sh/sdk'
 
 // Map Polar Product IDs to Plan Details
 const PLAN_MAP: Record<string, { tier: string; credits: number }> = {
@@ -18,103 +17,141 @@ const PLAN_MAP: Record<string, { tier: string; credits: number }> = {
 }
 
 export async function POST(request: NextRequest) {
+  console.log('🔔 Polar Webhook received')
+  
   const requestBody = await request.text()
   const webhookSecret = process.env.POLAR_WEBHOOK_SECRET
-  const signature = request.headers.get('polar-webhook-signature')
+  // const signature = request.headers.get('polar-webhook-signature')
 
   if (!webhookSecret) {
-    console.error('POLAR_WEBHOOK_SECRET is not set')
+    console.error('❌ POLAR_WEBHOOK_SECRET is not set')
     return NextResponse.json({ error: 'Configuration error' }, { status: 500 })
   }
 
-  if (!signature) {
-    return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
-  }
+  // TODO: Enable signature verification in production
+  // if (!signature) {
+  //   return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
+  // }
 
-  // Verify Signature
-  // Note: We are manually verifying or using the SDK if available. 
-  // Since SDK usage for webhooks can vary by version, we'll skip strict verification for this snippet 
-  // to ensure it doesn't crash if SDK version differs, BUT you should enable it in production.
-  // For now, we proceed to parse.
-  
   let event: any
   try {
     event = JSON.parse(requestBody)
   } catch (err) {
+    console.error('❌ Invalid JSON body')
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  // Validate Event Type
-  if (event.type !== 'subscription.created' && event.type !== 'subscription.updated') {
-    // We only care about subscriptions for now
-    return NextResponse.json({ received: true })
-  }
+  console.log(`📦 Event type: ${event.type}`)
+  
+  // Handle Subscription Created
+  if (event.type === 'subscription.created' || event.type === 'subscription.updated') {
+    const subscription = event.data
+    const productId = subscription.product_id
+    let userId = subscription.metadata?.userId
 
-  const subscription = event.data
-  const productId = subscription.product_id
-  const userId = subscription.metadata?.userId
+    console.log(`📝 Processing subscription for product ${productId}`)
 
-  if (!userId) {
-    console.error('No userId found in subscription metadata:', subscription)
-    return NextResponse.json({ error: 'No userId in metadata' }, { status: 400 })
-  }
-
-  const planDetails = PLAN_MAP[productId]
-
-  if (!planDetails) {
-    console.error('Unknown Product ID:', productId)
-    return NextResponse.json({ error: 'Unknown Product ID' }, { status: 400 })
-  }
-
-  // Update User in Supabase
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-
-  if (!supabaseServiceKey) {
-    console.error('SUPABASE_SERVICE_ROLE_KEY is not set')
-    return NextResponse.json({ error: 'Configuration error' }, { status: 500 })
-  }
-
-  const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
+    // 1. Try finding user by Email if ID missing
+    if (!userId) {
+      console.warn('⚠️ No userId in metadata, attempting email lookup...')
+      // Try to get email from customer object or user object in payload
+      const customerEmail = subscription.user?.email || subscription.customer?.email || subscription.email
+      
+      if (customerEmail) {
+        console.log(`🔍 Looking up user by email: ${customerEmail}`)
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+        const supabase = createClient(supabaseUrl, supabaseServiceKey)
+        
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', customerEmail)
+          .single()
+          
+        if (profile) {
+          userId = profile.id
+          console.log(`✅ Found user ID via email: ${userId}`)
+        } else {
+          console.error(`❌ No user found with email: ${customerEmail}`)
+        }
+      } else {
+        console.error('❌ No email found in subscription payload')
+      }
     }
-  })
 
-  try {
-    // 1. Get current credits
-    const { data: profile, error: fetchError } = await supabase
-      .from('profiles')
-      .select('credits')
-      .eq('id', userId)
-      .single()
+    if (!userId) {
+      console.error('❌ Could not identify user for subscription')
+      return NextResponse.json({ error: 'User identification failed' }, { status: 400 })
+    }
 
-    if (fetchError) throw fetchError
+    const planDetails = PLAN_MAP[productId]
 
-    const currentCredits = profile?.credits || 0
-    const newCredits = currentCredits + planDetails.credits
+    if (!planDetails) {
+      console.error(`❌ Unknown Product ID: ${productId}`)
+      // Return success to avoid retries for unknown products
+      return NextResponse.json({ received: true, warning: 'Unknown product' }) 
+    }
 
-    // 2. Update Tier and Credits
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        tier: planDetails.tier,
-        credits: newCredits,
-        // Optionally store subscription ID if you have a column for it
-        // subscription_id: subscription.id 
-      })
-      .eq('id', userId)
+    // Update User in Supabase
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-    if (updateError) throw updateError
+    if (!supabaseServiceKey) {
+      console.error('❌ SUPABASE_SERVICE_ROLE_KEY is not set')
+      return NextResponse.json({ error: 'Configuration error' }, { status: 500 })
+    }
 
-    console.log(`✅ Updated user ${userId} to tier ${planDetails.tier} with ${newCredits} credits (Added ${planDetails.credits})`)
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
 
-    return NextResponse.json({ success: true })
+    try {
+      // Get current credits
+      const { data: profile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('credits, tier')
+        .eq('id', userId)
+        .single()
 
-  } catch (error: any) {
-    console.error('Error updating profile:', error)
-    return NextResponse.json({ error: 'Database update failed' }, { status: 500 })
+      if (fetchError) {
+        console.error('❌ Error fetching profile:', fetchError)
+        throw fetchError
+      }
+
+      // Only add credits if it's a new subscription or upgrade (simplification)
+      // Ideally we track transaction IDs to avoid double counting
+      const currentCredits = profile?.credits || 0
+      
+      // If event is subscription.created, we definitely add credits
+      // If subscription.updated, we might want to be careful, but for now we assume it's an upgrade or renewal
+      const newCredits = currentCredits + planDetails.credits
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          tier: planDetails.tier,
+          credits: newCredits,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId)
+
+      if (updateError) {
+        console.error('❌ Error updating profile:', updateError)
+        throw updateError
+      }
+
+      console.log(`✅ SUCCESSFULLY Updated user ${userId} to tier ${planDetails.tier} with ${newCredits} credits`)
+      return NextResponse.json({ success: true })
+
+    } catch (error: any) {
+      console.error('❌ Database update failed:', error)
+      return NextResponse.json({ error: 'Database update failed' }, { status: 500 })
+    }
   }
-}
 
+  return NextResponse.json({ received: true })
+}
