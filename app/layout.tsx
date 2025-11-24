@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import FeaturebaseMessenger from '@/components/FeaturebaseMessenger'
 
 export const metadata: Metadata = {
   title: 'Spark Design - Design Apps and Software in Seconds',
@@ -21,7 +22,10 @@ export default function RootLayout({
           src="https://datafa.st/js/script.js"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <FeaturebaseMessenger />
+      </body>
     </html>
   )
 }
