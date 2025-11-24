@@ -43,11 +43,11 @@ const pricingTiers: PricingTier[] = [
     period: '/month',
     description: 'Perfect for getting started',
     features: [
-      '4 Apps',
+      '4 Projects',
       '300 AI credits per month',
-      'Clone template App Designs',
-      'Use images to create app designs',
-      'Export App Design'
+      'Clone template Project Designs',
+      'Use images to create project designs',
+      'Export Project Design'
     ],
     buttonText: 'Upgrade to Starter',
     hasBlackFriday: true
@@ -62,11 +62,11 @@ const pricingTiers: PricingTier[] = [
     period: '/month',
     description: 'Most popular for growing businesses',
     features: [
-      '10 Apps',
+      '10 Projects',
       '500 AI credits per month',
-      'Clone template App Designs',
-      'Use images to create app designs',
-      'Export App Design'
+      'Clone template Project Designs',
+      'Use images to create project designs',
+      'Export Project Design'
     ],
     buttonText: 'Upgrade to Pro',
     featured: true,
@@ -82,11 +82,11 @@ const pricingTiers: PricingTier[] = [
     period: '/month',
     description: 'For power users and teams',
     features: [
-      'Unlimited Apps',
+      'Unlimited Projects',
       '1000 AI credits per month',
-      'Clone template App Designs',
-      'Use images to create app designs',
-      'Export App Design'
+      'Clone template Project Designs',
+      'Use images to create project designs',
+      'Export Project Design'
     ],
     buttonText: 'Upgrade to Ultimate',
     hasBlackFriday: true
@@ -244,7 +244,16 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
                   <p className="text-gray-300 text-sm mb-6 min-h-[40px]">{tier.description}</p>
 
                   <ul className="space-y-3 mb-8 flex-1">
-                    {tier.features.map((feature, idx) => (
+                    {tier.features.map((feature, idx) => {
+                      // Adjust credit amount for annual plans
+                      let featureText = feature
+                      if (billingCycle === 'yearly' && feature.includes('AI credits per month')) {
+                         const credits = parseInt(feature.split(' ')[0])
+                         if (!isNaN(credits)) {
+                            featureText = `${credits * 12} AI credits per year`
+                         }
+                      }
+                      return (
                       <li key={idx} className="flex items-start text-sm">
                         <svg
                           className="w-4 h-4 text-[#0061e8] mr-2 mt-0.5 flex-shrink-0"
@@ -259,9 +268,9 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
                             d="M5 13l4 4L19 7"
                           />
                         </svg>
-                        <span className="text-gray-300">{feature}</span>
+                        <span className="text-gray-300">{featureText}</span>
                       </li>
-                    ))}
+                    )})}
                   </ul>
 
                   <button
