@@ -142,8 +142,7 @@ export async function POST(request: NextRequest) {
         .from('profiles')
         .update({
           tier: planDetails.tier,
-          credits: newCredits,
-          updated_at: new Date().toISOString()
+          credits: newCredits
         })
         .eq('id', userId)
 
