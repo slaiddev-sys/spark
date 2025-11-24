@@ -48,6 +48,7 @@ export default function EditorPage() {
   const [projects, setProjects] = useState<any[]>([])
   const [currentProject, setCurrentProject] = useState<any>(null)
   const [autoResumeData, setAutoResumeData] = useState<{message: string, image?: string} | null>(null)
+  const [mobileView, setMobileView] = useState<'chat' | 'preview'>('chat')
   const supabase = createClient()
   const router = useRouter()
 
@@ -441,6 +442,11 @@ export default function EditorPage() {
          role: 'assistant', 
          content: '⚠️ Insufficient credits, Upgrade to get more credits'
        }])
+       
+       // On mobile, stay on chat tab to see the error message
+       if (typeof window !== 'undefined' && window.innerWidth < 768) {
+         setMobileView('chat')
+       }
        return
     }
 
@@ -451,6 +457,11 @@ export default function EditorPage() {
     // Add user message
     setMessages(prev => [...prev, { role: 'user', content: message, image }])
     setIsLoading(true)
+    
+    // On mobile, switch to preview tab after sending message
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setMobileView('preview')
+    }
     
     // Show status: generating request
     setMessages(prev => [...prev, { 
@@ -871,35 +882,66 @@ export default function EditorPage() {
   }
 
   return (
-    <div className="h-screen w-screen bg-nuvix-dark flex overflow-hidden fixed inset-0">
-      {/* Chat Panel */}
-      <ChatPanel 
-        messages={messages}
-        onSendMessage={handleSendMessage}
-        deviceMode={deviceMode}
-        setDeviceMode={setDeviceMode}
-        isContextSelected={!!selectedFrameId}
-        setIsContextSelected={handleContextSelectionChange}
-        user={user}
-      />
-      
-      {/* Preview Panel */}
-      <PreviewPanel 
-        frames={frames}
-        selectedFrameId={selectedFrameId}
-        onSelectFrame={setSelectedFrameId}
-        deviceMode={deviceMode}
-        onUndo={handleUndo}
-        onRedo={handleRedo}
-        canUndo={history.past.length > 0}
-        canRedo={history.future.length > 0}
-        projects={projects}
-        currentProject={currentProject}
-        onSelectProject={handleSelectProject}
-        onCreateProject={handleCreateProject}
-        onRenameProject={handleRenameProject}
-        user={user}
-      />
+    <div className="h-screen w-screen bg-nuvix-dark flex flex-col overflow-hidden fixed inset-0">
+      {/* Mobile Tab Navigation */}
+      <div className="md:hidden flex border-b border-gray-800 bg-[#0a0b0f]">
+        <button
+          onClick={() => setMobileView('chat')}
+          className={`flex-1 py-3 text-sm font-medium transition-colors ${
+            mobileView === 'chat'
+              ? 'text-white border-b-2 border-[#0061e8]'
+              : 'text-gray-400'
+          }`}
+        >
+          Chat
+        </button>
+        <button
+          onClick={() => setMobileView('preview')}
+          className={`flex-1 py-3 text-sm font-medium transition-colors ${
+            mobileView === 'preview'
+              ? 'text-white border-b-2 border-[#0061e8]'
+              : 'text-gray-400'
+          }`}
+        >
+          Preview
+        </button>
+      </div>
+
+      {/* Desktop: Side by side | Mobile: Stacked with tabs */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Chat Panel */}
+        <div className={`${mobileView === 'chat' ? 'flex' : 'hidden'} md:flex`}>
+          <ChatPanel 
+            messages={messages}
+            onSendMessage={handleSendMessage}
+            deviceMode={deviceMode}
+            setDeviceMode={setDeviceMode}
+            isContextSelected={!!selectedFrameId}
+            setIsContextSelected={handleContextSelectionChange}
+            user={user}
+          />
+        </div>
+        
+        {/* Preview Panel */}
+        <div className={`${mobileView === 'preview' ? 'flex' : 'hidden'} md:flex flex-1`}>
+          <PreviewPanel 
+            frames={frames}
+            selectedFrameId={selectedFrameId}
+            onSelectFrame={setSelectedFrameId}
+            deviceMode={deviceMode}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            canUndo={history.past.length > 0}
+            canRedo={history.future.length > 0}
+            projects={projects}
+            currentProject={currentProject}
+            onSelectProject={handleSelectProject}
+            onCreateProject={handleCreateProject}
+            onRenameProject={handleRenameProject}
+            user={user}
+          />
+        </div>
+      </div>
     </div>
   )
 }
