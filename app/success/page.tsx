@@ -25,7 +25,7 @@ function SuccessContent() {
         </p>
 
         <Link 
-          href="/editor" 
+          href="/editor?upgraded=true" 
           className="block w-full bg-[#0061e8] hover:bg-[#0051c8] text-white font-medium py-3 px-4 rounded-xl transition-colors"
         >
           Return to Editor

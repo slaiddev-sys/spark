@@ -49,6 +49,57 @@ export default function EditorPage() {
   const supabase = createClient()
   const router = useRouter()
 
+  // Auto-resume generation after upgrade
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    const urlParams = new URLSearchParams(window.location.search)
+    const upgraded = urlParams.get('upgraded')
+    
+    if (upgraded === 'true' && user && (user.credits || 0) >= 5) {
+      const pendingGen = localStorage.getItem('pendingGeneration')
+      
+      if (pendingGen) {
+        try {
+          const { message, image, timestamp } = JSON.parse(pendingGen)
+          
+          // Only auto-resume if request is less than 30 minutes old
+          const thirtyMinutes = 30 * 60 * 1000
+          if (Date.now() - timestamp < thirtyMinutes) {
+            // Clear the pending generation
+            localStorage.removeItem('pendingGeneration')
+            
+            // Remove the upgraded param from URL
+            window.history.replaceState({}, '', '/editor')
+            
+            // Add a welcome back message
+            setMessages(prev => [...prev, {
+              role: 'assistant',
+              content: '🎉 Welcome back! Your upgrade was successful. Continuing your design...',
+              type: 'normal'
+            }])
+            
+            // Auto-resume generation after a short delay
+            setTimeout(() => {
+              handleSendMessage(message, image)
+            }, 1000)
+          } else {
+            // Request too old, just clear it
+            localStorage.removeItem('pendingGeneration')
+          }
+        } catch (err) {
+          console.error('Error parsing pending generation:', err)
+          localStorage.removeItem('pendingGeneration')
+        }
+      }
+      
+      // Remove upgraded param even if no pending generation
+      if (window.location.search.includes('upgraded=true')) {
+        window.history.replaceState({}, '', '/editor')
+      }
+    }
+  }, [user])
+
   const fetchUserData = async () => {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
@@ -307,6 +358,13 @@ export default function EditorPage() {
   const handleSendMessage = async (message: string, image?: string) => {
     // Check credits before processing
     if (user && (user.credits || 0) < 5) {
+       // Store pending request for auto-resume after upgrade
+       localStorage.setItem('pendingGeneration', JSON.stringify({
+         message,
+         image,
+         timestamp: Date.now()
+       }))
+       
        setMessages(prev => [...prev, { role: 'user', content: message, image }])
        setMessages(prev => [...prev, { 
          role: 'assistant', 
