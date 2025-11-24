@@ -115,6 +115,8 @@ export default function SettingsModal({ isOpen, onClose, user }: SettingsModalPr
     if (win.Featurebase) {
       win.Featurebase('open')
     }
+    // Close the settings modal
+    onClose()
   }
 
   return (
