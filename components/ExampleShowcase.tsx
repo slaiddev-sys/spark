@@ -17,7 +17,7 @@ export default function ExampleShowcase() {
   ]
 
   return (
-    <section className="py-20 px-6">
+    <section className="pt-10 pb-20 px-6">
       <div className="max-w-7xl mx-auto">
         <h2 className="text-3xl md:text-4xl font-medium text-white mb-12 text-center">
           Example Apps Built with Spark
@@ -33,12 +33,12 @@ export default function ExampleShowcase() {
                 {example.title}
               </h3>
               
-              <div className="relative w-full h-[400px] rounded-2xl overflow-hidden bg-white">
+              <div className="relative w-full h-[400px] rounded-xl overflow-hidden">
                 <Image
                   src={example.image}
                   alt={example.title}
                   fill
-                  className="object-contain rounded-2xl"
+                  className="object-contain"
                 />
               </div>
             </div>
