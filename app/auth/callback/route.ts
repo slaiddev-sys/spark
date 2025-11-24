@@ -12,14 +12,7 @@ export async function GET(request: NextRequest) {
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  // Use absolute URL for local development or production
-  const baseUrl = process.env.NODE_ENV === 'production' 
-    ? 'https://sparkuiapp.com'
-    : 'http://localhost:3000'
-  
-  const next = requestUrl.searchParams.get('next') || '/editor'
-  
-  // Return absolute redirect URL
-  return NextResponse.redirect(new URL(next, baseUrl))
+  // URL to redirect to after sign in process completes
+  return NextResponse.redirect(new URL('/editor', requestUrl.origin))
 }
 
