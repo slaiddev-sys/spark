@@ -33,12 +33,12 @@ export default function ExampleShowcase() {
                 {example.title}
               </h3>
               
-              <div className="relative w-full h-[400px] rounded-xl overflow-hidden">
+              <div className="relative w-full h-[400px] rounded-2xl overflow-hidden bg-white">
                 <Image
                   src={example.image}
                   alt={example.title}
                   fill
-                  className="object-contain"
+                  className="object-contain rounded-2xl"
                 />
               </div>
             </div>
