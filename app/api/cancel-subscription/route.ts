@@ -118,11 +118,15 @@ export async function POST(request: NextRequest) {
     try {
       console.log('Attempting to cancel subscription:', subscriptionId)
       
-      const result = await polar.subscriptions.cancel({
-        id: subscriptionId
+      // Polar SDK uses update method with cancel_at_period_end flag
+      const result = await polar.subscriptions.update({
+        id: subscriptionId,
+        subscriptionUpdate: {
+          cancel_at_period_end: true
+        }
       })
       
-      console.log('✅ Polar subscription canceled successfully:', subscriptionId, result)
+      console.log('✅ Polar subscription set to cancel at period end:', subscriptionId, result)
     } catch (polarError: any) {
       console.error('Error canceling Polar subscription:', polarError)
       console.error('Error details:', JSON.stringify(polarError, null, 2))
