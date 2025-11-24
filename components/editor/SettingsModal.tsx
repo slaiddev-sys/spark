@@ -109,6 +109,14 @@ export default function SettingsModal({ isOpen, onClose, user }: SettingsModalPr
 
   const plan = getPlanDetails(user?.tier || 'free')
 
+  const handleContactSupport = () => {
+    // Open Featurebase messenger widget
+    const win = window as any
+    if (win.Featurebase) {
+      win.Featurebase('open')
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={onClose}>
       <div className="w-[500px] bg-[#0a0b0f] rounded-2xl border border-gray-800 shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
@@ -124,7 +132,7 @@ export default function SettingsModal({ isOpen, onClose, user }: SettingsModalPr
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-8">
+        <div className="p-6 space-y-8 max-h-[calc(100vh-120px)] overflow-y-auto">
           {/* Account Section */}
           <div>
             <h3 className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-4">Account</h3>
@@ -172,6 +180,25 @@ export default function SettingsModal({ isOpen, onClose, user }: SettingsModalPr
                   </button>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Contact Support */}
+          <div>
+            <h3 className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-4">Contact</h3>
+            <div className="border border-gray-800 rounded-xl p-5 bg-[#1a1b1e]">
+              <p className="text-gray-400 text-sm mb-4">
+                Need help or have questions? Contact our support team.
+              </p>
+              <button
+                onClick={handleContactSupport}
+                className="bg-[#0061e8] hover:bg-[#0051c8] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>Contact Support</span>
+              </button>
             </div>
           </div>
           
