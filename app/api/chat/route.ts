@@ -48,6 +48,9 @@ export async function POST(request: NextRequest) {
       async start(controller) {
         const encoder = new TextEncoder()
         try {
+          // Send an initial ping to establish connection and prevent timeouts
+          controller.enqueue(encoder.encode('<!-- PROCESSING_START -->'))
+
           // Stream chunks
           for await (const chunk of result.stream) {
             const text = chunk.text()

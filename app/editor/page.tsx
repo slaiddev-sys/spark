@@ -393,6 +393,13 @@ export default function EditorPage() {
         
         const chunk = decoder.decode(value, { stream: true })
         
+        // Filter out keep-alive markers
+        if (chunk.includes('<!-- PROCESSING_START -->')) {
+            // Remove the marker but keep other content if any
+            const cleanChunk = chunk.replace('<!-- PROCESSING_START -->', '')
+            if (!cleanChunk) continue
+        }
+
         // Check for credit deduction info
         const creditMatch = chunk.match(/<!-- CREDITS_DEDUCTED: (\d+) -->/)
         if (creditMatch) {
@@ -637,7 +644,9 @@ export default function EditorPage() {
 
       // Generic fallback for other errors
       if (!errorMessage || errorMessage === 'Failed to fetch' || errorMessage === 'Failed to get streaming response from AI') {
-         errorMessage = '❌ Error: Could not connect to AI service. Please check your API key configuration.'
+         // Keep the user-friendly message but append the original error in console
+         console.warn('Original error suppressed:', error.message)
+         errorMessage = '❌ Error: Could not connect to AI service. (Timeout or Network Issue)'
       }
 
       setMessages(prev => [...prev, { 
