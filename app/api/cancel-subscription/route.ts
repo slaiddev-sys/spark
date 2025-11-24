@@ -116,15 +116,23 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      await polar.subscriptions.cancel({
+      console.log('Attempting to cancel subscription:', subscriptionId)
+      
+      const result = await polar.subscriptions.cancel({
         id: subscriptionId
       })
       
-      console.log('✅ Polar subscription canceled successfully:', subscriptionId)
+      console.log('✅ Polar subscription canceled successfully:', subscriptionId, result)
     } catch (polarError: any) {
       console.error('Error canceling Polar subscription:', polarError)
+      console.error('Error details:', JSON.stringify(polarError, null, 2))
+      
+      // Return more detailed error
       return NextResponse.json(
-        { error: 'Failed to cancel subscription with payment provider' },
+        { 
+          error: 'Failed to cancel subscription with payment provider',
+          details: polarError.message || polarError.toString()
+        },
         { status: 500 }
       )
     }
