@@ -652,7 +652,7 @@ export default function PreviewPanel({ frames, selectedFrameId, onSelectFrame, d
 
                   {/* Content Layer */}
                   <div className={`w-full h-full overflow-hidden rounded-[inherit] ${!isSelected ? 'pointer-events-none' : ''}`}>
-                     <MockupRenderer designHtml={frame.content} />
+                     <MockupRenderer designHtml={frame.content} locked={frame.locked} />
                   </div>
                 </div>
               )

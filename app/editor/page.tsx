@@ -11,6 +11,7 @@ export interface DesignFrame {
   content: string
   type: 'mobile' | 'desktop'
   timestamp: number
+  locked?: boolean // Fake placeholder frame for free users
 }
 
 // History state interface
@@ -58,47 +59,76 @@ export default function EditorPage() {
     const urlParams = new URLSearchParams(window.location.search)
     const upgraded = urlParams.get('upgraded')
     
-    if (upgraded === 'true' && (user.credits || 0) >= 5) {
-      const pendingGen = localStorage.getItem('pendingGeneration')
+    if (upgraded === 'true' && user.tier !== 'free' && (user.credits || 0) >= 5) {
+      // Check if there are locked frames to unlock and generate
+      const lockedFrames = frames.filter(f => f.locked)
+      const realFrames = frames.filter(f => !f.locked)
       
-      if (pendingGen) {
-        try {
-          const { message, image, timestamp } = JSON.parse(pendingGen)
-          
-          // Only auto-resume if request is less than 30 minutes old
-          const thirtyMinutes = 30 * 60 * 1000
-          if (Date.now() - timestamp < thirtyMinutes) {
-            // Clear the pending generation
-            localStorage.removeItem('pendingGeneration')
+      if (lockedFrames.length > 0 && realFrames.length > 0) {
+        // User upgraded and has locked frames - automatically generate them!
+        console.log('Auto-generating locked frames after upgrade')
+        
+        // Remove the upgraded param from URL
+        window.history.replaceState({}, '', '/editor')
+        
+        // Remove locked frames from state
+        setFrames(prevFrames => prevFrames.filter(f => !f.locked))
+        
+        // Add a welcome back message
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: '🎉 Welcome back! Your upgrade was successful. Generating the remaining frames to complete your design...',
+          type: 'normal'
+        }])
+        
+        // Set data for auto-generation continuation
+        setAutoResumeData({ 
+          message: 'Continue the design flow with 3 more screens to complete the app',
+          image: undefined 
+        })
+      } else {
+        // Check for pending generation from credit exhaustion
+        const pendingGen = localStorage.getItem('pendingGeneration')
+        
+        if (pendingGen) {
+          try {
+            const { message, image, timestamp } = JSON.parse(pendingGen)
             
-            // Remove the upgraded param from URL
-            window.history.replaceState({}, '', '/editor')
-            
-            // Add a welcome back message
-            setMessages(prev => [...prev, {
-              role: 'assistant',
-              content: '🎉 Welcome back! Your upgrade was successful. Continuing your design...',
-              type: 'normal'
-            }])
-            
-            // Set data for auto-resume
-            setAutoResumeData({ message, image })
-          } else {
-            // Request too old, just clear it
+            // Only auto-resume if request is less than 30 minutes old
+            const thirtyMinutes = 30 * 60 * 1000
+            if (Date.now() - timestamp < thirtyMinutes) {
+              // Clear the pending generation
+              localStorage.removeItem('pendingGeneration')
+              
+              // Remove the upgraded param from URL
+              window.history.replaceState({}, '', '/editor')
+              
+              // Add a welcome back message
+              setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: '🎉 Welcome back! Your upgrade was successful. Continuing your design...',
+                type: 'normal'
+              }])
+              
+              // Set data for auto-resume
+              setAutoResumeData({ message, image })
+            } else {
+              // Request too old, just clear it
+              localStorage.removeItem('pendingGeneration')
+              window.history.replaceState({}, '', '/editor')
+            }
+          } catch (err) {
+            console.error('Error parsing pending generation:', err)
             localStorage.removeItem('pendingGeneration')
             window.history.replaceState({}, '', '/editor')
           }
-        } catch (err) {
-          console.error('Error parsing pending generation:', err)
-          localStorage.removeItem('pendingGeneration')
+        } else {
+          // No pending generation, just remove the param
           window.history.replaceState({}, '', '/editor')
         }
-      } else {
-        // No pending generation, just remove the param
-        window.history.replaceState({}, '', '/editor')
       }
     }
-  }, [user])
+  }, [user, frames])
 
   // Trigger auto-resume when data is set
   useEffect(() => {
@@ -622,6 +652,26 @@ export default function EditorPage() {
                  updatedFrames.push(frame)
              }
           })
+          
+          // Add 3 locked placeholder frames for free users (if not editing and free tier)
+          if (!selectedFrameId && user?.tier === 'free' && framesToSave.length === 3) {
+            const realFrameIds = new Set(updatedFrames.filter(f => !f.locked).map(f => f.id))
+            const lockedFrameIds = new Set(updatedFrames.filter(f => f.locked).map(f => f.id))
+            
+            // Only add locked frames if we don't already have 3 locked frames
+            if (lockedFrameIds.size < 3) {
+              for (let i = 0; i < 3; i++) {
+                const lockedId = `locked-${Date.now()}-${i}`
+                updatedFrames.push({
+                  id: lockedId,
+                  content: '', // Empty content for locked frames
+                  type: deviceMode,
+                  timestamp: Date.now() + i,
+                  locked: true
+                })
+              }
+            }
+          }
           
           return updatedFrames
       })
