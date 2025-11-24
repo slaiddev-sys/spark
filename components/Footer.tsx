@@ -61,13 +61,33 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Community */}
+          {/* Pages */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Community</h3>
+            <h3 className="text-white font-semibold mb-4">Pages</h3>
             <ul className="space-y-3">
               <li>
-                <a href="#explore" className="text-gray-400 hover:text-white transition-colors text-sm">
-                  Explore
+                <a href="/" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  Home
+                </a>
+              </li>
+              <li>
+                <a href="/pricing" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  Pricing
+                </a>
+              </li>
+              <li>
+                <a href="/editor" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  Editor
+                </a>
+              </li>
+              <li>
+                <a href="/login" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  Login
+                </a>
+              </li>
+              <li>
+                <a href="/signup" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  Sign Up
                 </a>
               </li>
             </ul>
