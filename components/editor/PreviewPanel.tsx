@@ -658,8 +658,8 @@ export default function PreviewPanel({ frames, selectedFrameId, onSelectFrame, d
               )
             })}
 
-            {/* Pro Frames Placeholders (Locked) - Only show when at least 3 frames are fully generated */}
-            {frames.length >= 3 && frames[2]?.content.length > 100 && Array.from({ length: 3 }).map((_, i) => {
+            {/* Pro Frames Placeholders (Locked) - Only show when at least 3 frames are fully generated AND user is on free tier */}
+            {frames.length >= 3 && frames[2]?.content.length > 100 && (user?.tier === 'free' || !user?.tier) && Array.from({ length: 3 }).map((_, i) => {
                // Calculate position for locked frames: stick them after the last frame
                // Or better, just hide them if we have infinite canvas?
                // The user "drag them wherever you want" implies they are distinct objects.
