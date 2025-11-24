@@ -13,6 +13,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <script
+          defer
+          data-website-id="dfid_iS17RGPbPwgsQfWf8foqj"
+          data-domain="www.sparkuiapp.com"
+          src="https://datafa.st/js/script.js"
+        />
+      </head>
       <body>{children}</body>
     </html>
   )
