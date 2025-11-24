@@ -17,7 +17,7 @@ export default function ExampleShowcase() {
   ]
 
   return (
-    <section className="pt-10 pb-20 px-6">
+    <section className="pt-4 pb-20 px-6">
       <div className="max-w-7xl mx-auto">
         <h2 className="text-3xl md:text-4xl font-medium text-white mb-12 text-center">
           Example Apps Built with Spark
