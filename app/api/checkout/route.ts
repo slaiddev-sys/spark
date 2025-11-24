@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     // If they are strictly Price IDs, this might need adjustment, but passing it as a product is the standard way to create a checkout.
     const result = await polar.checkouts.create({
       products: [priceId],
-      successUrl: process.env.POLAR_SUCCESS_URL || `${req.nextUrl.origin}/success`,
+      successUrl: `${req.nextUrl.origin}/success?checkout_id={CHECKOUT_ID}`,
       metadata: {
         userId: session.user.id,
       },
