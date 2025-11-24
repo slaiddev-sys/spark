@@ -143,7 +143,8 @@ export async function POST(request: NextRequest) {
         .from('profiles')
         .update({
           tier: planDetails.tier,
-          credits: newCredits
+          credits: newCredits,
+          polar_subscription_id: subscription.id // Store for future cancellation
         })
         .eq('id', userId)
 

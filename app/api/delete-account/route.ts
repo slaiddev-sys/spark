@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+import { Polar } from '@polar-sh/sdk'
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,7 +23,8 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = user.id
-    console.log('Deleting account for user:', userId)
+    const userEmail = user.email
+    console.log('Deleting account for user:', userId, userEmail)
 
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
@@ -45,6 +47,40 @@ export async function POST(request: NextRequest) {
         }
       }
     )
+
+    // Cancel Polar subscription if exists
+    if (process.env.POLAR_ACCESS_TOKEN) {
+      try {
+        // First, get the user's profile to check for subscription_id
+        const { data: profile } = await supabaseAdmin
+          .from('profiles')
+          .select('polar_subscription_id')
+          .eq('id', userId)
+          .single()
+
+        if (profile?.polar_subscription_id) {
+          console.log('Canceling Polar subscription:', profile.polar_subscription_id)
+          
+          const polar = new Polar({
+            accessToken: process.env.POLAR_ACCESS_TOKEN,
+            server: 'production',
+          })
+
+          // Cancel the subscription in Polar
+          await polar.subscriptions.cancel({
+            id: profile.polar_subscription_id
+          })
+          
+          console.log('✅ Polar subscription canceled successfully')
+        } else {
+          console.log('No Polar subscription found for user')
+        }
+        
+      } catch (polarError) {
+        console.error('Error canceling Polar subscription:', polarError)
+        // Continue with account deletion even if Polar cleanup fails
+      }
+    }
 
     // Delete user data in order (respecting foreign key constraints)
     // 1. Delete frames (references projects)
