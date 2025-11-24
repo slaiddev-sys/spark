@@ -40,18 +40,21 @@ export async function POST(request: NextRequest) {
 
     console.log('Sending request to Gemini with mode:', deviceMode)
 
-    // Get the Gemini result (contains stream and response promise)
-    const result = await generateUIWithGeminiStream(message, history || [], image, deviceMode, currentDesign)
-    
+    console.log('Sending request to Gemini with mode:', deviceMode)
+
     // Create a ReadableStream to pipe the Gemini content to the client
     const stream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder()
         try {
-          // Send an initial ping to establish connection and prevent timeouts
+          // 1. Send an initial ping to establish connection and prevent timeouts IMMEDIATELY
           controller.enqueue(encoder.encode('<!-- PROCESSING_START -->'))
 
-          // Stream chunks
+          // 2. Start Gemini generation (this might take 60s+ to resolve for reasoning models)
+          // We do this INSIDE the stream so the connection is already open
+          const result = await generateUIWithGeminiStream(message, history || [], image, deviceMode, currentDesign)
+          
+          // 3. Stream chunks
           for await (const chunk of result.stream) {
             const text = chunk.text()
             if (text) {
@@ -100,8 +103,12 @@ export async function POST(request: NextRequest) {
           }
 
           controller.close()
-        } catch (error) {
+        } catch (error: any) {
           console.error('Stream processing error:', error)
+          // Send error to client if possible (as a comment or text)
+          // Since headers are already sent (200), we can't change status
+          const errorMsg = `<!-- STREAM_ERROR: ${error.message} -->`
+          controller.enqueue(encoder.encode(errorMsg))
           controller.error(error)
         }
       }
