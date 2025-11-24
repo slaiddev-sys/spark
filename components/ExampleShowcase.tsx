@@ -10,10 +10,10 @@ interface ExampleApp {
 
 export default function ExampleShowcase() {
   const examples: ExampleApp[] = [
-    { title: 'Meditation App', image: '/Meditation.png' },
-    { title: 'Sleep Cycle', image: '/Sleep.png' },
+    { title: 'Meditation App', image: '/Meditation 2.png' },
+    { title: 'Sleep Cycle', image: '/Sleep 2.png' },
     { title: 'Calorie Tracking', image: '/Food.png' },
-    { title: 'Finance App', image: '/Finance.png' },
+    { title: 'Finance App', image: '/Finance 2.png' },
   ]
 
   return (
