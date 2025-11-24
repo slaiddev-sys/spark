@@ -15,7 +15,7 @@ export default function Navigation() {
               alt="Spark Logo" 
               width={24} 
               height={24}
-              className="rounded-lg"
+              className="rounded-lg w-5 h-5 md:w-6 md:h-6"
             />
             <span className="text-white text-2xl md:text-3xl font-semibold">Spark</span>
           </a>

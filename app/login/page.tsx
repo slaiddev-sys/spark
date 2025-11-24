@@ -76,7 +76,7 @@ export default function LoginPage() {
               alt="Spark Logo" 
               width={40} 
               height={40}
-              className="rounded-lg"
+              className="rounded-lg w-8 h-8 md:w-10 md:h-10"
             />
           </Link>
 

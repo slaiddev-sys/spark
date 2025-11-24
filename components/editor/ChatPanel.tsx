@@ -93,7 +93,7 @@ export default function ChatPanel({ messages, onSendMessage, deviceMode, setDevi
           {/* Right Side: Credits & Settings */}
           <div className="flex items-center space-x-3">
             <div className="flex items-center space-x-1.5 bg-gray-800/50 px-3 py-1.5 rounded-full border border-gray-700/50">
-              <img src="/Novix Favicon.png" alt="Credits" className="w-3.5 h-3.5" />
+              <img src="/Novix Favicon.png" alt="Credits" className="w-3 h-3 md:w-3.5 md:h-3.5" />
               <span className="text-xs font-medium text-gray-300">{user?.credits ?? 0}</span>
             </div>
             <button 
@@ -114,7 +114,7 @@ export default function ChatPanel({ messages, onSendMessage, deviceMode, setDevi
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 ? (
           <div className="text-center text-gray-500 mt-24">
-            <img src="/Novix Favicon.png" alt="Spark AI" className="w-12 h-12 mx-auto mb-4" />
+            <img src="/Novix Favicon.png" alt="Spark AI" className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-4" />
             <p className="mb-4 text-gray-300">👋 Hi! I'm Spark AI</p>
             <p className="text-sm">Start by describing the app you want to design</p>
             <div className="mt-12 flex flex-col items-center space-y-2">

@@ -82,7 +82,7 @@ export default function Hero() {
             alt="Spark Icon" 
             width={50} 
             height={50}
-            className="inline-block"
+            className="inline-block w-10 h-10 md:w-12 md:h-12"
           />
         </h2>
 
