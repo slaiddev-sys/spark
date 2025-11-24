@@ -49,7 +49,7 @@ export default function Footer() {
                 </svg>
               </a>
               <a 
-                href="mailto:contact@nuvix.com" 
+                href="mailto:contact@spark.com" 
                 className="text-gray-400 hover:text-white transition-colors"
                 aria-label="Email"
               >
@@ -78,12 +78,12 @@ export default function Footer() {
             <h3 className="text-white font-semibold mb-4">Legal</h3>
             <ul className="space-y-3">
               <li>
-                <a href="#terms" className="text-gray-400 hover:text-white transition-colors text-sm">
+                <a href="/terms" className="text-gray-400 hover:text-white transition-colors text-sm">
                   Terms of Service
                 </a>
               </li>
               <li>
-                <a href="#privacy" className="text-gray-400 hover:text-white transition-colors text-sm">
+                <a href="/privacy" className="text-gray-400 hover:text-white transition-colors text-sm">
                   Privacy Policy
                 </a>
               </li>
