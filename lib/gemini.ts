@@ -84,7 +84,7 @@ export const getFallbackModel = () => {
 }
 
 // System prompt for UI generation
-export const UI_GENERATION_PROMPT = (hasTrainingDesigns: boolean, deviceMode: 'mobile' | 'desktop', currentDesignContext: string | null) => `You are Spark AI, an expert UI/UX designer and developer. Your role is to help users create beautiful, modern, and functional user interfaces for apps and software.
+export const UI_GENERATION_PROMPT = (hasTrainingDesigns: boolean, deviceMode: 'mobile' | 'desktop', currentDesignContext: string | null, userTier: string = 'free') => `You are Spark AI, an expert UI/UX designer and developer. Your role is to help users create beautiful, modern, and functional user interfaces for apps and software.
 
 ${hasTrainingDesigns ? `
 **CRITICAL: You have been provided with reference design images that represent HIGH-QUALITY UI examples.**
@@ -114,8 +114,8 @@ When generating designs, you MUST:
        - Modify the provided code.
 
     2. **IF CREATING NEW (No Context):**
-       - You MUST generate a **COMPLETE APP FLOW** (3-4 screens) for vague or high-level requests (e.g., "Create a travel app").
-       - Include key screens like: Onboarding/Login, Home Dashboard, and Details/Settings.
+       - You MUST generate a **COMPLETE APP FLOW** (${userTier === 'free' ? '3 screens' : '6 screens'}) for vague or high-level requests (e.g., "Create a travel app").
+       - ${userTier === 'free' ? 'Include key screens like: Onboarding/Login, Home Dashboard, and Details/Settings.' : 'Include comprehensive screens like: Splash/Onboarding, Login, Home Dashboard, Feature Screen 1, Feature Screen 2, and Profile/Settings.'}
        - Output them as separate \`\`\`html code blocks, one after another.
        - Start IMMEDIATELY with the first \`\`\`html block.
 
@@ -180,7 +180,8 @@ export async function generateUIWithGeminiStream(
   conversationHistory: { role: string; content: string; image?: string }[] = [],
   image?: string,
   deviceMode: 'mobile' | 'desktop' = 'mobile',
-  currentDesignContext: string | null = null
+  currentDesignContext: string | null = null,
+  userTier: string = 'free'
 ) {
   try {
     const model = getGeminiModel()
@@ -211,7 +212,7 @@ export async function generateUIWithGeminiStream(
     })
 
     // Prepare system prompt parts with training designs
-    const systemPromptParts: any[] = [{ text: UI_GENERATION_PROMPT(trainingDesigns.length > 0, deviceMode, currentDesignContext) }]
+    const systemPromptParts: any[] = [{ text: UI_GENERATION_PROMPT(trainingDesigns.length > 0, deviceMode, currentDesignContext, userTier) }]
     
     // Add training design images to the system prompt
     if (trainingDesigns.length > 0) {
@@ -330,10 +331,11 @@ export async function generateUIWithGemini(
   conversationHistory: { role: string; content: string; image?: string }[] = [],
   image?: string,
   deviceMode: 'mobile' | 'desktop' = 'mobile',
-  currentDesignContext: string | null = null
+  currentDesignContext: string | null = null,
+  userTier: string = 'free'
 ) {
   try {
-    const stream = await generateUIWithGeminiStream(userPrompt, conversationHistory, image, deviceMode, currentDesignContext)
+    const stream = await generateUIWithGeminiStream(userPrompt, conversationHistory, image, deviceMode, currentDesignContext, userTier)
     let text = ''
     for await (const chunk of stream) {
       const chunkText = chunk.text()

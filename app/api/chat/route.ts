@@ -15,10 +15,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check user credits
+    // Check user credits and tier
     const { data: profile } = await supabase
       .from('profiles')
-      .select('credits')
+      .select('credits, tier')
       .eq('id', session.user.id)
       .single()
 
@@ -28,6 +28,8 @@ export async function POST(request: NextRequest) {
         { status: 402 } // Payment Required
       )
     }
+
+    const userTier = profile.tier || 'free'
 
     const { message, image, history, deviceMode, currentDesign } = await request.json()
 
@@ -52,7 +54,7 @@ export async function POST(request: NextRequest) {
 
           // 2. Start Gemini generation (this might take 60s+ to resolve for reasoning models)
           // We do this INSIDE the stream so the connection is already open
-          const result = await generateUIWithGeminiStream(message, history || [], image, deviceMode, currentDesign)
+          const result = await generateUIWithGeminiStream(message, history || [], image, deviceMode, currentDesign, userTier)
           
           // 3. Stream chunks
           for await (const chunk of result.stream) {
