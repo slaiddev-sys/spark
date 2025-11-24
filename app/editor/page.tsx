@@ -54,24 +54,26 @@ export default function EditorPage() {
   // Check for auto-resume on mount/user change
   useEffect(() => {
     if (typeof window === 'undefined') return
-    if (!user) return
+    if (!user || !currentProject) return
     
     const urlParams = new URLSearchParams(window.location.search)
     const upgraded = urlParams.get('upgraded')
     
     if (upgraded === 'true' && user.tier !== 'free' && (user.credits || 0) >= 5) {
-      // Check if there are locked frames to unlock and generate
-      const lockedFrames = frames.filter(f => f.locked)
-      const realFrames = frames.filter(f => !f.locked)
+      // Check if this project had locked frames before upgrade
+      const hasLockedFramesFlag = localStorage.getItem(`project-${currentProject.id}-has-locked-frames`)
       
-      if (lockedFrames.length > 0 && realFrames.length > 0) {
-        // User upgraded and has locked frames - automatically generate them!
-        console.log('Auto-generating locked frames after upgrade')
+      if (hasLockedFramesFlag === 'true') {
+        // User upgraded and had locked frames - automatically generate them!
+        console.log('Auto-generating continuation frames after upgrade')
+        
+        // Clear the flag
+        localStorage.removeItem(`project-${currentProject.id}-has-locked-frames`)
         
         // Remove the upgraded param from URL
         window.history.replaceState({}, '', '/editor')
         
-        // Remove locked frames from state
+        // Remove any locked frames from state (if any exist)
         setFrames(prevFrames => prevFrames.filter(f => !f.locked))
         
         // Add a welcome back message
@@ -128,7 +130,7 @@ export default function EditorPage() {
         }
       }
     }
-  }, [user, frames])
+  }, [user, currentProject])
 
   // Trigger auto-resume when data is set
   useEffect(() => {
@@ -669,6 +671,11 @@ export default function EditorPage() {
                   timestamp: Date.now() + i,
                   locked: true
                 })
+              }
+              
+              // Mark that this project has locked frames waiting for upgrade
+              if (currentProject) {
+                localStorage.setItem(`project-${currentProject.id}-has-locked-frames`, 'true')
               }
             }
           }
