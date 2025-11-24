@@ -57,15 +57,15 @@ export const loadTrainingDesigns = (): { name: string; data: string; mimeType: s
 }
 
 // Get Gemini model for reasoning and UI generation
-// Using Gemini 2.0 Flash as primary for speed and stability (3 Pro Preview is unstable)
+// Using Gemini 2.0 Flash Thinking (Reasoning) as requested
 export const getGeminiModel = () => {
   return genAI.getGenerativeModel({ 
-    model: 'gemini-2.0-flash-exp',
+    model: 'gemini-2.0-flash-thinking-exp-01-21',
     generationConfig: {
       temperature: 1.0,
       topK: 40,
       topP: 0.95,
-      maxOutputTokens: 8192,
+      maxOutputTokens: 64000, // Higher token limit for reasoning models
     },
   })
 }
