@@ -95,7 +95,7 @@ function SignUpForm() {
           </Link>
 
           <h1 className="text-4xl font-semibold text-white mb-3">
-            Build your app today
+            Design your app today
           </h1>
           <p className="text-gray-400">
             Create an account to start using Spark.
