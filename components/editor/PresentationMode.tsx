@@ -10,9 +10,10 @@ interface PresentationModeProps {
   initialFrameIndex: number
   onClose: () => void
   deviceMode: 'mobile' | 'desktop'
+  hidePresentationButton?: boolean
 }
 
-export default function PresentationMode({ frames, initialFrameIndex, onClose, deviceMode }: PresentationModeProps) {
+export default function PresentationMode({ frames, initialFrameIndex, onClose, deviceMode, hidePresentationButton = false }: PresentationModeProps) {
   const [currentIndex, setCurrentIndex] = useState(initialFrameIndex)
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false)
   const currentFrame = frames[currentIndex]
@@ -33,31 +34,32 @@ export default function PresentationMode({ frames, initialFrameIndex, onClose, d
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'ArrowRight') handleNext()
     if (e.key === 'ArrowLeft') handlePrev()
-    if (e.key === 'Escape') onClose()
+    if (e.key === 'Escape' && !hidePresentationButton) onClose()
   }
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [currentIndex, frames.length, onClose]) // Updated dependencies
+  }, [currentIndex, frames.length, onClose, hidePresentationButton])
 
   if (!currentFrame) return null
 
   return (
     <div className="fixed inset-0 z-[100] bg-[#0a0b0f] flex flex-col items-center justify-center">
       {/* Header / Controls */}
-      <div className="absolute top-6 right-6 flex items-center space-x-4 z-20">
-
-        <button 
-          onClick={onClose}
-          className="p-2 rounded-full bg-gray-800/50 text-white hover:bg-gray-800 transition-colors group"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:text-red-400 transition-colors">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
+      {!hidePresentationButton && (
+        <div className="absolute top-6 right-6 flex items-center space-x-4 z-20">
+          <button 
+            onClick={onClose}
+            className="p-2 rounded-full bg-gray-800/50 text-white hover:bg-gray-800 transition-colors group"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:text-red-400 transition-colors">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      )}
 
       {/* Main Content Area */}
       <div className="flex items-center justify-center w-full h-full p-8 relative">

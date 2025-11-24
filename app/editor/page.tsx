@@ -49,6 +49,7 @@ export default function EditorPage() {
   const [currentProject, setCurrentProject] = useState<any>(null)
   const [autoResumeData, setAutoResumeData] = useState<{message: string, image?: string} | null>(null)
   const [mobileView, setMobileView] = useState<'chat' | 'preview'>('chat')
+  const [isPresentationMode, setIsPresentationMode] = useState(false)
   const supabase = createClient()
   const router = useRouter()
 
@@ -939,6 +940,7 @@ export default function EditorPage() {
             onCreateProject={handleCreateProject}
             onRenameProject={handleRenameProject}
             user={user}
+            forcePresentationMode={typeof window !== 'undefined' && window.innerWidth < 768}
           />
         </div>
       </div>

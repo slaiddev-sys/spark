@@ -21,10 +21,11 @@ interface PreviewPanelProps {
   onSelectProject: (project: any) => void
   onCreateProject: () => void
   onRenameProject: (projectId: string, newName: string) => void
-  user: any // Added user prop
+  user: any
+  forcePresentationMode?: boolean
 }
 
-export default function PreviewPanel({ frames, selectedFrameId, onSelectFrame, deviceMode, onUndo, onRedo, canUndo, canRedo, projects, currentProject, onSelectProject, onCreateProject, onRenameProject, user }: PreviewPanelProps) {
+export default function PreviewPanel({ frames, selectedFrameId, onSelectFrame, deviceMode, onUndo, onRedo, canUndo, canRedo, projects, currentProject, onSelectProject, onCreateProject, onRenameProject, user, forcePresentationMode = false }: PreviewPanelProps) {
   const [zoom, setZoom] = useState(50)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
@@ -79,6 +80,13 @@ export default function PreviewPanel({ frames, selectedFrameId, onSelectFrame, d
 
   // Presentation Mode State
   const [isPresentationOpen, setIsPresentationOpen] = useState(false)
+  
+  // Auto-enable presentation mode on mobile
+  useEffect(() => {
+    if (forcePresentationMode && frames.length > 0) {
+      setIsPresentationOpen(true)
+    }
+  }, [forcePresentationMode, frames.length])
 
   // Export Menu State
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false)
@@ -804,8 +812,14 @@ export default function PreviewPanel({ frames, selectedFrameId, onSelectFrame, d
         <PresentationMode 
           frames={frames}
           initialFrameIndex={selectedFrameId ? frames.findIndex(f => f.id === selectedFrameId) : 0}
-          onClose={() => setIsPresentationOpen(false)}
+          onClose={() => {
+            // On mobile with force mode, keep it open (user should switch tabs instead)
+            if (!forcePresentationMode) {
+              setIsPresentationOpen(false)
+            }
+          }}
           deviceMode={deviceMode}
+          hidePresentationButton={forcePresentationMode}
         />
       )}
 
