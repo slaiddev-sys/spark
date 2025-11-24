@@ -31,10 +31,10 @@ export default function Hero() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Redirect to editor with the prompt
+    // Redirect to signup with the prompt
     if (inputValue.trim()) {
       // TODO: Handle image upload if selectedImage exists
-      window.location.href = `/editor?prompt=${encodeURIComponent(inputValue)}`
+      window.location.href = `/signup?prompt=${encodeURIComponent(inputValue)}`
     }
   }
 

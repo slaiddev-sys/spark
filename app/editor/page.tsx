@@ -51,6 +51,31 @@ export default function EditorPage() {
   const supabase = createClient()
   const router = useRouter()
 
+  // Check for pending prompt from homepage signup flow
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!user || !currentProject || messages.length > 0) return
+    
+    const urlParams = new URLSearchParams(window.location.search)
+    const promptFromUrl = urlParams.get('prompt')
+    const promptFromStorage = localStorage.getItem('pendingPrompt')
+    
+    const prompt = promptFromUrl || promptFromStorage
+    
+    if (prompt) {
+      // Clear the stored prompt
+      localStorage.removeItem('pendingPrompt')
+      
+      // Remove prompt from URL if present
+      if (promptFromUrl) {
+        window.history.replaceState({}, '', '/editor')
+      }
+      
+      // Send the prompt automatically
+      setAutoResumeData({ message: prompt, image: undefined })
+    }
+  }, [user, currentProject, messages.length])
+
   // Check for auto-resume on mount/user change
   useEffect(() => {
     if (typeof window === 'undefined') return
