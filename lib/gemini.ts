@@ -57,30 +57,29 @@ export const loadTrainingDesigns = (): { name: string; data: string; mimeType: s
 }
 
 // Get Gemini model for reasoning and UI generation
-// Using Gemini 2.0 Flash Thinking (Reasoning) - This is the latest reasoning-capable model
-// Note: Gemini 3.0 is not yet released. This is the correct model for "reasoning".
+// Using Gemini 3 Pro Preview as requested (confirmed available)
 export const getGeminiModel = () => {
+  return genAI.getGenerativeModel({ 
+    model: 'gemini-3-pro-preview',
+    generationConfig: {
+      temperature: 1.0,
+      topK: 40,
+      topP: 0.95,
+      maxOutputTokens: 64000, // High token limit for reasoning
+    },
+  })
+}
+
+// Fallback model if primary is unavailable
+// Using Gemini 2.0 Flash Thinking as reliable fallback
+export const getFallbackModel = () => {
   return genAI.getGenerativeModel({ 
     model: 'gemini-2.0-flash-thinking-exp-01-21',
     generationConfig: {
       temperature: 1.0,
       topK: 40,
       topP: 0.95,
-      maxOutputTokens: 64000, // Thinking models support higher output
-    },
-  })
-}
-
-// Fallback model if primary is unavailable
-// Using Gemini 2.5 Pro Preview (newest Pro model) as fallback
-export const getFallbackModel = () => {
-  return genAI.getGenerativeModel({ 
-    model: 'gemini-2.5-pro-preview-03-25',
-    generationConfig: {
-      temperature: 1.0,
-      topK: 40,
-      topP: 0.95,
-      maxOutputTokens: 8192,
+      maxOutputTokens: 64000,
     },
   })
 }
