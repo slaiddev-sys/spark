@@ -1,46 +1,38 @@
 # Vercel Environment Variables Update
 
-## Important: Add Service Role Key
+## 1. Add Service Role Key (Already Requested)
 
-The account deletion feature requires the **SUPABASE_SERVICE_ROLE_KEY** to be added to your Vercel project.
+**Key:** `SUPABASE_SERVICE_ROLE_KEY`
+**Value:** (From Supabase Dashboard)
 
-### Steps to Add:
+## 2. Add Polar Webhook Secret (NEW)
 
-1. Go to your **Vercel Dashboard**
-2. Select your **Spark** project
-3. Click on **Settings** → **Environment Variables**
-4. Add the following variable:
+To enable automatic plan upgrades and credit recharging, you must configure the Polar Webhook.
 
-   **Key:** `SUPABASE_SERVICE_ROLE_KEY`
+### Steps:
+
+1. Go to your **Polar Dashboard** -> **Settings** -> **Webhooks**.
+2. Create a new Endpoint:
+   - **URL:** `https://your-project.vercel.app/api/webhook/polar` (Replace with your actual Vercel domain)
+   - **Events:** Select `subscription.created` and `subscription.updated`.
+3. Copy the **Secret** provided by Polar.
+4. Go to **Vercel Dashboard** -> **Settings** -> **Environment Variables**.
+5. Add:
    
-   **Value:** (Copy from your local `.env.local` file or from Supabase Dashboard → Settings → API → service_role key)
+   **Key:** `POLAR_WEBHOOK_SECRET`
    
-   ```
-   eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ndnlhend1cnR6YmVhanB1d3N2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzgxOTMzNCwiZXhwIjoyMDc5Mzk1MzM0fQ.UsaP_rKgwRt-hnrxBPYZW1ONA-6Y4b4V0Bz2_bST8F8
-   ```
+   **Value:** (Paste the secret from Polar)
 
-5. Make sure to apply it to **all environments** (Production, Preview, Development)
-6. **Redeploy** your project for the changes to take effect
+## Checklist
 
-### Why is this needed?
-
-The `SUPABASE_SERVICE_ROLE_KEY` is required to:
-- Delete user records from the database
-- Remove authentication users (including Google OAuth links)
-- Bypass Row Level Security (RLS) policies for admin operations
-
-⚠️ **Security Note:** The service role key has elevated permissions. Never expose it in client-side code. It's only used in the server-side API route (`/api/delete-account`).
-
-## Current Vercel Environment Variables Checklist
-
-Make sure ALL of these are set:
+Make sure ALL of these are set in Vercel:
 
 - ✅ `NEXT_PUBLIC_SUPABASE_URL`
 - ✅ `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- ⚠️ `SUPABASE_SERVICE_ROLE_KEY` **(NEW - Required for account deletion)**
+- ✅ `SUPABASE_SERVICE_ROLE_KEY`
 - ✅ `GOOGLE_GEMINI_API_KEY`
 - ✅ `POLAR_ACCESS_TOKEN`
 - ✅ `POLAR_SUCCESS_URL`
+- ⚠️ `POLAR_WEBHOOK_SECRET` **(NEW)**
 
-After adding the service role key, trigger a new deployment from your Vercel dashboard or by pushing a new commit.
-
+Redeploy after adding variables.
