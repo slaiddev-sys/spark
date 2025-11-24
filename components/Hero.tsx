@@ -73,48 +73,88 @@ export default function Hero() {
             <textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSubmit(e)
-                }
-              }}
               placeholder="Ask Spark to design an app..."
               className="w-full bg-transparent text-white placeholder-gray-500 outline-none resize-none text-base min-h-[50px] leading-relaxed"
               rows={2}
             />
+            
+            {/* Action Buttons */}
+            <div className="flex items-center justify-between mt-3">
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  className="p-2.5 hover:bg-[#2a3447] rounded-xl transition-colors"
+                  title="Upload image"
+                >
+                  <svg 
+                    width="22" 
+                    height="22" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="text-gray-400"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+                    <path d="M21 15L16 10L5 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+              
+              <button
+                type="submit"
+                className="bg-[#0061e8] hover:bg-[#0051c8] text-white p-2.5 rounded-full transition-all hover:shadow-lg hover:shadow-blue-500/50"
+                title="Submit"
+              >
+                <svg 
+                  width="18" 
+                  height="18" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path 
+                    d="M12 19V5M12 5L5 12M12 5L19 12" 
+                    stroke="currentColor" 
+                    strokeWidth="2.5" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
-          
-          {/* Suggestion Pills */}
-          <div className="mt-8 flex flex-col items-center space-y-3 relative z-0">
-            <button
-              type="button"
-              onClick={() => window.location.href = `/editor?prompt=${encodeURIComponent('Create a calorie tracking app')}`}
-              className="bg-[#0a0b0f]/80 border border-[#2a3447] text-gray-400 hover:text-white hover:border-gray-500 px-6 py-2.5 rounded-full text-sm transition-all hover:bg-[#1a1b1e]"
-            >
-              Calorie tracking app
-            </button>
-            <button
-              type="button"
-              onClick={() => window.location.href = `/editor?prompt=${encodeURIComponent('Design a productivity app')}`}
-              className="bg-[#0a0b0f]/80 border border-[#2a3447] text-gray-400 hover:text-white hover:border-gray-500 px-6 py-2.5 rounded-full text-sm transition-all hover:bg-[#1a1b1e]"
-            >
-              Productivity App
-            </button>
-            <button
-              type="button"
-              onClick={() => window.location.href = `/editor?prompt=${encodeURIComponent('Create a meditation app')}`}
-              className="bg-[#0a0b0f]/80 border border-[#2a3447] text-gray-400 hover:text-white hover:border-gray-500 px-6 py-2.5 rounded-full text-sm transition-all hover:bg-[#1a1b1e]"
-            >
-              Meditation App
-            </button>
-            <button
-              type="button"
-              onClick={() => window.location.href = `/editor?prompt=${encodeURIComponent('Design a sleep tracker app')}`}
-              className="bg-[#0a0b0f]/80 border border-[#2a3447] text-gray-400 hover:text-white hover:border-gray-500 px-6 py-2.5 rounded-full text-sm transition-all hover:bg-[#1a1b1e]"
-            >
-              Sleep tracker App
-            </button>
+
+          {/* Suggestion Pills - Horizontal Layout */}
+          <div className="mt-6 flex flex-wrap justify-center gap-3 relative z-0">
+             <button
+               type="button"
+               onClick={() => window.location.href = `/editor?prompt=${encodeURIComponent('Create a calorie tracking app')}`}
+               className="bg-[#0a0b0f]/80 border border-[#2a3447] text-gray-400 hover:text-white hover:border-gray-500 px-5 py-2 rounded-full text-sm transition-all hover:bg-[#1a1b1e]"
+             >
+               Calorie tracking app
+             </button>
+             <button
+               type="button"
+               onClick={() => window.location.href = `/editor?prompt=${encodeURIComponent('Design a productivity app')}`}
+               className="bg-[#0a0b0f]/80 border border-[#2a3447] text-gray-400 hover:text-white hover:border-gray-500 px-5 py-2 rounded-full text-sm transition-all hover:bg-[#1a1b1e]"
+             >
+               Productivity App
+             </button>
+             <button
+               type="button"
+               onClick={() => window.location.href = `/editor?prompt=${encodeURIComponent('Create a meditation app')}`}
+               className="bg-[#0a0b0f]/80 border border-[#2a3447] text-gray-400 hover:text-white hover:border-gray-500 px-5 py-2 rounded-full text-sm transition-all hover:bg-[#1a1b1e]"
+             >
+               Meditation App
+             </button>
+             <button
+               type="button"
+               onClick={() => window.location.href = `/editor?prompt=${encodeURIComponent('Design a sleep tracker app')}`}
+               className="bg-[#0a0b0f]/80 border border-[#2a3447] text-gray-400 hover:text-white hover:border-gray-500 px-5 py-2 rounded-full text-sm transition-all hover:bg-[#1a1b1e]"
+             >
+               Sleep tracker App
+             </button>
           </div>
         </form>
       </div>
