@@ -5,11 +5,35 @@ import Image from 'next/image'
 
 export default function Hero() {
   const [inputValue, setInputValue] = useState('')
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file && file.type.startsWith('image/')) {
+      setSelectedImage(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const removeImage = () => {
+    setSelectedImage(null)
+    setImagePreview(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     // Redirect to editor with the prompt
     if (inputValue.trim()) {
+      // TODO: Handle image upload if selectedImage exists
       window.location.href = `/editor?prompt=${encodeURIComponent(inputValue)}`
     }
   }
@@ -78,11 +102,46 @@ export default function Hero() {
               rows={2}
             />
             
+            {/* Image Preview */}
+            {imagePreview && (
+              <div className="flex items-center space-x-2 mt-2 mb-1">
+                <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-700">
+                  <Image 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="text-gray-400 hover:text-red-400 transition-colors"
+                  title="Remove image"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                  </svg>
+                </button>
+              </div>
+            )}
+
             {/* Action Buttons */}
             <div className="flex items-center justify-between mt-3">
               <div className="flex items-center space-x-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageSelect}
+                  className="hidden"
+                  id="image-upload"
+                />
                 <button
                   type="button"
+                  onClick={() => fileInputRef.current?.click()}
                   className="p-2.5 hover:bg-[#2a3447] rounded-xl transition-colors"
                   title="Upload image"
                 >
