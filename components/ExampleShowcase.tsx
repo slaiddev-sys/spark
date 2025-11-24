@@ -40,36 +40,52 @@ export default function ExampleShowcase() {
     try {
       const updatedExamples = await Promise.all(
         examples.map(async (example) => {
-          // Get user ID from email
-          const { data: profiles } = await supabase
+          console.log('Fetching for:', example.email)
+          
+          // Get user ID from email (case insensitive)
+          const { data: profiles, error: profileError } = await supabase
             .from('profiles')
-            .select('id')
-            .eq('email', example.email)
+            .select('id, email')
+            .ilike('email', example.email)
             .limit(1)
           
-          if (!profiles || profiles.length === 0) return example
+          console.log('Profile result:', profiles, profileError)
+          
+          if (!profiles || profiles.length === 0) {
+            console.log('No profile found for:', example.email)
+            return example
+          }
 
           const userId = profiles[0].id
+          console.log('Found user ID:', userId)
 
           // Get the first project for this user
-          const { data: projects } = await supabase
+          const { data: projects, error: projectError } = await supabase
             .from('projects')
             .select('id, title')
             .eq('user_id', userId)
             .order('created_at', { ascending: false })
             .limit(1)
 
-          if (!projects || projects.length === 0) return example
+          console.log('Projects result:', projects, projectError)
+
+          if (!projects || projects.length === 0) {
+            console.log('No projects found for:', userId)
+            return example
+          }
 
           const project = projects[0]
+          console.log('Found project:', project.id, project.title)
 
           // Get first 3 frames
-          const { data: frames } = await supabase
+          const { data: frames, error: framesError } = await supabase
             .from('frames')
             .select('id, content, frame_number')
             .eq('project_id', project.id)
             .order('frame_number', { ascending: true })
             .limit(3)
+
+          console.log('Frames result:', frames?.length, framesError)
 
           return {
             ...example,
@@ -81,6 +97,7 @@ export default function ExampleShowcase() {
         })
       )
 
+      console.log('Final examples:', updatedExamples)
       setExamples(updatedExamples)
     } catch (error) {
       console.error('Error fetching example projects:', error)
