@@ -57,10 +57,10 @@ export const loadTrainingDesigns = (): { name: string; data: string; mimeType: s
 }
 
 // Get Gemini model for reasoning and UI generation
+// Using Gemini 3 Pro Preview as requested
 export const getGeminiModel = () => {
-  // using gemini-1.5-pro as it is the current stable pro model
   return genAI.getGenerativeModel({ 
-    model: 'gemini-1.5-pro', 
+    model: 'gemini-3-pro-preview',
     generationConfig: {
       temperature: 1.0,
       topK: 40,
