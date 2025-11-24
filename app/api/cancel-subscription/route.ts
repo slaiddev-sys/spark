@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user has an active subscription
-    if (!profile.polar_subscription_id || profile.tier === 'free') {
+    if (profile.tier === 'free') {
       return NextResponse.json(
         { error: 'No active subscription found' },
         { status: 400 }
@@ -77,12 +77,50 @@ export async function POST(request: NextRequest) {
       server: 'production',
     })
 
+    let subscriptionId = profile.polar_subscription_id
+
+    // If no subscription ID stored, try to find it by email
+    if (!subscriptionId) {
+      console.log('No stored subscription ID, looking up by email:', user.email)
+      
+      try {
+        // List subscriptions (Polar will return subscriptions for this API key's org)
+        const subscriptions = await polar.subscriptions.list({})
+        
+        // Find subscription matching user's email
+        const userSubscription = subscriptions.result.items?.find(
+          (sub: any) => (sub.user?.email === user.email || sub.customer?.email === user.email) && 
+                        (sub.status === 'active' || sub.status === 'trialing')
+        )
+        
+        if (userSubscription) {
+          subscriptionId = userSubscription.id
+          console.log('Found subscription by email:', subscriptionId)
+          
+          // Save it for future use
+          await supabaseAdmin
+            .from('profiles')
+            .update({ polar_subscription_id: subscriptionId })
+            .eq('id', userId)
+        }
+      } catch (lookupError) {
+        console.error('Error looking up subscription:', lookupError)
+      }
+    }
+
+    if (!subscriptionId) {
+      return NextResponse.json(
+        { error: 'Could not find active subscription. Please contact support.' },
+        { status: 404 }
+      )
+    }
+
     try {
       await polar.subscriptions.cancel({
-        id: profile.polar_subscription_id
+        id: subscriptionId
       })
       
-      console.log('✅ Polar subscription canceled successfully:', profile.polar_subscription_id)
+      console.log('✅ Polar subscription canceled successfully:', subscriptionId)
     } catch (polarError: any) {
       console.error('Error canceling Polar subscription:', polarError)
       return NextResponse.json(
