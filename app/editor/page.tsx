@@ -49,6 +49,23 @@ export default function EditorPage() {
   const supabase = createClient()
   const router = useRouter()
 
+  const fetchUserData = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      return // Don't redirect here, let the initial check handle it or just stay put
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', session.user.id)
+      .single()
+
+    if (profile) {
+      setUser({ ...session.user, ...profile })
+    }
+  }
+
   useEffect(() => {
     const getUserAndProjects = async () => {
       setIsLoading(true) // Start initial loading
@@ -92,6 +109,16 @@ export default function EditorPage() {
     }
 
     getUserAndProjects()
+
+    // Re-fetch user data on window focus to catch credit updates
+    const onFocus = () => {
+      fetchUserData()
+    }
+    window.addEventListener('focus', onFocus)
+    
+    return () => {
+      window.removeEventListener('focus', onFocus)
+    }
   }, [supabase, router])
 
   const handleCreateProject = async () => {
