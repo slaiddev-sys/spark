@@ -10,17 +10,9 @@ interface MockupRendererProps {
 export default function MockupRenderer({ designHtml, locked = false }: MockupRendererProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const [error, setError] = useState<string | null>(null)
-  const [blobUrl, setBlobUrl] = useState<string | null>(null)
-  const [isIframeLoaded, setIsIframeLoaded] = useState(false)
 
-  // Reset loaded state when designHtml changes drastically (optional, but good for new generations)
-  // However, for streaming, we might flicker if we reset too aggressively.
-  // Let's reset only when we start a fresh generation (empty or null)
-  useEffect(() => {
-      if (!designHtml) {
-          setIsIframeLoaded(false)
-      }
-  }, [designHtml])
+  const [blobUrl, setBlobUrl] = useState<string | null>(null)
+  const [isContentVisible, setIsContentVisible] = useState(false)
 
   // Show locked state for premium frames
   if (locked) {
@@ -51,7 +43,10 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
 
   useEffect(() => {
     console.log("MockupRenderer received designHtml:", designHtml ? designHtml.substring(0, 50) + "..." : "null");
-    if (!designHtml) return
+    if (!designHtml) {
+      setIsContentVisible(false)
+      return
+    }
 
     try {
       // Try to extract HTML from code block if present
@@ -78,40 +73,41 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
         return
       }
 
-      // Inject a script to detect when the body has children (i.e. graphic elements)
-      // We can also use the 'load' event of the window/document inside the blob
-      
+      // Inject script to detect when content is rendered
       const scriptToInject = `
         <script>
-          window.addEventListener('load', () => {
-             // Fallback: send message immediately on load
-             window.parent.postMessage({ type: 'IFRAME_LOADED' }, '*');
-          });
-          
-          // Also check if there's already content (e.g. during streaming updates)
-          if (document.body && document.body.children.length > 0) {
-             window.parent.postMessage({ type: 'IFRAME_LOADED' }, '*');
-          }
-          
-          // Observer for dynamic additions
-          const observer = new MutationObserver((mutations) => {
-            if (document.body && document.body.children.length > 0) {
-              window.parent.postMessage({ type: 'IFRAME_LOADED' }, '*');
-              observer.disconnect();
+          (function() {
+            function checkContent() {
+              const hasVisibleContent = document.body && (
+                document.body.children.length > 0 || 
+                document.body.innerText.trim().length > 0
+              );
+              
+              if (hasVisibleContent) {
+                window.parent.postMessage({ type: 'CONTENT_READY' }, '*');
+              }
             }
-          });
-          
-          if (document.body) {
-             observer.observe(document.body, { childList: true, subtree: true });
-          } else {
-             document.addEventListener('DOMContentLoaded', () => {
-                observer.observe(document.body, { childList: true, subtree: true });
-             });
-          }
+            
+            // Check immediately on load
+            window.addEventListener('load', checkContent);
+            
+            // Check on DOMContentLoaded
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', checkContent);
+            } else {
+              checkContent();
+            }
+            
+            // Also observe for mutations in case content loads dynamically
+            const observer = new MutationObserver(checkContent);
+            if (document.body) {
+              observer.observe(document.body, { childList: true, subtree: true });
+            }
+          })();
         </script>
       `
       
-      // Insert script before closing body or at end
+      // Insert script before closing body tag or at the end
       if (htmlContent.includes('</body>')) {
         htmlContent = htmlContent.replace('</body>', scriptToInject + '</body>')
       } else {
@@ -122,6 +118,7 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
       const blob = new Blob([htmlContent], { type: 'text/html' })
       const url = URL.createObjectURL(blob)
       setBlobUrl(url)
+      setIsContentVisible(false) // Reset visibility when new content loads
       
       // Cleanup function
       return () => URL.revokeObjectURL(url)
@@ -131,10 +128,11 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
     }
   }, [designHtml])
 
+  // Listen for content ready message from iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.data && event.data.type === 'IFRAME_LOADED') {
-        setIsIframeLoaded(true)
+      if (event.data && event.data.type === 'CONTENT_READY') {
+        setIsContentVisible(true)
       }
     }
     
@@ -156,25 +154,28 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
       <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 p-4">
         <div className="w-8 h-8 border-2 border-[#0061e8] border-t-transparent rounded-full animate-spin mb-3"></div>
         <p className="text-xs font-medium">Designing UI...</p>
-        {/* <p className="text-[10px] opacity-50 mt-2 text-center max-w-[200px] truncate">{designHtml.substring(0, 50)}...</p> */}
+        <p className="text-[10px] opacity-50 mt-2 text-center max-w-[200px] truncate">{designHtml.substring(0, 50)}...</p>
       </div>
     )
   }
 
   return (
     <div className="relative w-full h-full">
-      {(!isIframeLoaded || !blobUrl) && (
+      {/* Loading overlay - shown until content is visible */}
+      {!isContentVisible && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
-           <div className="w-8 h-8 border-2 border-[#0061e8] border-t-transparent rounded-full animate-spin mb-3"></div>
-           <p className="text-xs font-medium text-gray-400">Rendering...</p>
+          <div className="w-8 h-8 border-2 border-[#0061e8] border-t-transparent rounded-full animate-spin mb-3"></div>
+          <p className="text-xs font-medium text-gray-600">Rendering UI...</p>
         </div>
       )}
-    <iframe
-      src={blobUrl || ''}
-      className="w-full h-full border-0"
-      sandbox="allow-same-origin allow-scripts allow-forms"
-      title="Design Preview"
-    />
+      
+      <iframe
+        ref={iframeRef}
+        src={blobUrl || ''}
+        className="w-full h-full border-0"
+        sandbox="allow-same-origin allow-scripts allow-forms"
+        title="Design Preview"
+      />
     </div>
   )
 }
