@@ -10,8 +10,17 @@ interface MockupRendererProps {
 export default function MockupRenderer({ designHtml, locked = false }: MockupRendererProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const [error, setError] = useState<string | null>(null)
-
   const [blobUrl, setBlobUrl] = useState<string | null>(null)
+  const [isIframeLoaded, setIsIframeLoaded] = useState(false)
+
+  // Reset loaded state when designHtml changes drastically (optional, but good for new generations)
+  // However, for streaming, we might flicker if we reset too aggressively.
+  // Let's reset only when we start a fresh generation (empty or null)
+  useEffect(() => {
+      if (!designHtml) {
+          setIsIframeLoaded(false)
+      }
+  }, [designHtml])
 
   // Show locked state for premium frames
   if (locked) {
@@ -40,22 +49,9 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
     )
   }
 
-  // Add state to track if iframe has loaded content
-  const [isIframeLoaded, setIsIframeLoaded] = useState(false)
-
-  useEffect(() => {
-    // Reset loaded state when content changes
-    if (designHtml) {
-      setIsIframeLoaded(false)
-    }
-  }, [designHtml])
-
   useEffect(() => {
     console.log("MockupRenderer received designHtml:", designHtml ? designHtml.substring(0, 50) + "..." : "null");
     if (!designHtml) return
-    
-    // Reset iframe loaded state when new content arrives
-    // setIsIframeLoaded(false) // Triggered by dependency above
 
     try {
       // Try to extract HTML from code block if present
@@ -81,7 +77,7 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
         }
         return
       }
-      
+
       // Inject a script to detect when the body has children (i.e. graphic elements)
       // We can also use the 'load' event of the window/document inside the blob
       
@@ -121,7 +117,6 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
       } else {
         htmlContent += scriptToInject
       }
-       
 
       // Create a Blob URL for safer rendering
       const blob = new Blob([htmlContent], { type: 'text/html' })
@@ -156,14 +151,30 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
     )
   }
 
+  if (designHtml && !blobUrl) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 p-4">
+        <div className="w-8 h-8 border-2 border-[#0061e8] border-t-transparent rounded-full animate-spin mb-3"></div>
+        <p className="text-xs font-medium">Designing UI...</p>
+        {/* <p className="text-[10px] opacity-50 mt-2 text-center max-w-[200px] truncate">{designHtml.substring(0, 50)}...</p> */}
+      </div>
+    )
+  }
+
   return (
     <div className="relative w-full h-full">
-       <iframe
-        src={blobUrl || ''}
-        className="w-full h-full border-0"
-        sandbox="allow-same-origin allow-scripts allow-forms"
-        title="Design Preview"
-      />
+      {(!isIframeLoaded || !blobUrl) && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
+           <div className="w-8 h-8 border-2 border-[#0061e8] border-t-transparent rounded-full animate-spin mb-3"></div>
+           <p className="text-xs font-medium text-gray-400">Rendering...</p>
+        </div>
+      )}
+    <iframe
+      src={blobUrl || ''}
+      className="w-full h-full border-0"
+      sandbox="allow-same-origin allow-scripts allow-forms"
+      title="Design Preview"
+    />
     </div>
   )
 }
