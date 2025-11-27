@@ -118,7 +118,7 @@ When generating designs, you MUST:
        - You MUST generate a **COMPLETE APP FLOW** (${userTier === 'free' ? '3 screens' : '6 screens'}) for vague or high-level requests (e.g., "Create a travel app").
        - ${userTier === 'free' ? 'Include key screens like: Onboarding/Login, Home Dashboard, and Details/Settings.' : 'Include comprehensive screens like: Splash/Onboarding, Login, Home Dashboard, Feature Screen 1, Feature Screen 2, and Profile/Settings.'}
        - Output them as separate \`\`\`html code blocks, one after another.
-       - Start IMMEDIATELY with the first \`\`\`html block.
+       - Start IMMEDIATELY with the first \`\`\`html block. DO NOT write any introductory text.
 
     **FORMAT (MANDATORY):**
     \`\`\`html

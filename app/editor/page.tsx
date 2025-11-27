@@ -586,7 +586,7 @@ export default function EditorPage() {
         }
 
         // Parse matches for multi-frame generation
-        const codeBlockRegex = /```html\s*([\s\S]*?)(?:```|$)/g
+        const codeBlockRegex = /```(?:\w*)\s*([\s\S]*?)(?:```|$)/g
         const matches = [...receivedHtml.matchAll(codeBlockRegex)]
         
         // If we are in creation mode, we might need to add more frames
@@ -647,7 +647,7 @@ export default function EditorPage() {
       // FINAL UPDATE after stream ends
       
       // Calculate frames to save strictly from generated content to avoid stale state issues
-      const codeBlockRegex = /```html\s*([\s\S]*?)(?:```|$)/g
+      const codeBlockRegex = /```(?:\w*)\s*([\s\S]*?)(?:```|$)/g
       const matches = [...receivedHtml.matchAll(codeBlockRegex)]
       const framesToSave: DesignFrame[] = []
 

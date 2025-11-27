@@ -40,15 +40,28 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
     )
   }
 
+  // Add state to track if iframe has loaded content
+  const [isIframeLoaded, setIsIframeLoaded] = useState(false)
+
+  useEffect(() => {
+    // Reset loaded state when content changes
+    if (designHtml) {
+      setIsIframeLoaded(false)
+    }
+  }, [designHtml])
+
   useEffect(() => {
     console.log("MockupRenderer received designHtml:", designHtml ? designHtml.substring(0, 50) + "..." : "null");
     if (!designHtml) return
+    
+    // Reset iframe loaded state when new content arrives
+    // setIsIframeLoaded(false) // Triggered by dependency above
 
     try {
       // Try to extract HTML from code block if present
       // We use a regex that doesn't strictly require the closing backticks to support streaming
       let htmlContent = designHtml || ''
-      const codeBlockRegex = /```html\s*([\s\S]*?)(?:```|$)/
+      const codeBlockRegex = /```(?:\w*)\s*([\s\S]*?)(?:```|$)/
       const match = designHtml?.match(codeBlockRegex)
       
       if (match && match[1]) {
@@ -68,6 +81,45 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
         }
         return
       }
+      
+      // Inject a script to detect when the body has children (i.e. graphic elements)
+      // We can also use the 'load' event of the window/document inside the blob
+      const scriptToInject = `
+        <script>
+          window.addEventListener('load', () => {
+             // Fallback: send message immediately on load
+             window.parent.postMessage({ type: 'IFRAME_LOADED' }, '*');
+          });
+          
+          // Also check if there's already content (e.g. during streaming updates)
+          if (document.body && document.body.children.length > 0) {
+             window.parent.postMessage({ type: 'IFRAME_LOADED' }, '*');
+          }
+          
+          // Observer for dynamic additions
+          const observer = new MutationObserver((mutations) => {
+            if (document.body && document.body.children.length > 0) {
+              window.parent.postMessage({ type: 'IFRAME_LOADED' }, '*');
+              observer.disconnect();
+            }
+          });
+          
+          if (document.body) {
+             observer.observe(document.body, { childList: true, subtree: true });
+          } else {
+             document.addEventListener('DOMContentLoaded', () => {
+                observer.observe(document.body, { childList: true, subtree: true });
+             });
+          }
+        </script>
+      `
+      
+      // Insert script before closing body or at end
+      if (htmlContent.includes('</body>')) {
+        htmlContent = htmlContent.replace('</body>', scriptToInject + '</body>')
+      } else {
+        htmlContent += scriptToInject
+      }
 
       // Create a Blob URL for safer rendering
       const blob = new Blob([htmlContent], { type: 'text/html' })
@@ -82,6 +134,17 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
     }
   }, [designHtml])
 
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'IFRAME_LOADED') {
+        setIsIframeLoaded(true)
+      }
+    }
+    
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [])
+
   if (!designHtml) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 p-4 animate-pulse">
@@ -91,22 +154,24 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
     )
   }
 
-  if (designHtml && !blobUrl) {
-    return (
-      <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 p-4">
-        <div className="w-8 h-8 border-2 border-[#0061e8] border-t-transparent rounded-full animate-spin mb-3"></div>
-        <p className="text-xs font-medium">Designing UI...</p>
-        <p className="text-[10px] opacity-50 mt-2 text-center max-w-[200px] truncate">{designHtml.substring(0, 50)}...</p>
-      </div>
-    )
-  }
-
   return (
-    <iframe
-      src={blobUrl || ''}
-      className="w-full h-full border-0"
-      sandbox="allow-same-origin allow-scripts allow-forms"
-      title="Design Preview"
-    />
+    <div className="relative w-full h-full">
+       {(!blobUrl || !isIframeLoaded) && (
+          <div className="absolute inset-0 z-10 bg-[#0a0b0f] flex flex-col items-center justify-center text-gray-400 p-4">
+            <div className="w-8 h-8 border-2 border-[#0061e8] border-t-transparent rounded-full animate-spin mb-3"></div>
+            <p className="text-xs font-medium">Designing UI...</p>
+            <p className="text-[10px] opacity-50 mt-2 text-center max-w-[200px] truncate">
+               {designHtml.length > 50 ? designHtml.substring(0, 50) + "..." : "Initializing..."}
+            </p>
+          </div>
+       )}
+       
+       <iframe
+        src={blobUrl || ''}
+        className={`w-full h-full border-0 transition-opacity duration-500 ${isIframeLoaded ? 'opacity-100' : 'opacity-0'}`}
+        sandbox="allow-same-origin allow-scripts allow-forms"
+        title="Design Preview"
+      />
+    </div>
   )
 }
