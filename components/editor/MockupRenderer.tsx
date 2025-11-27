@@ -84,6 +84,7 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
       
       // Inject a script to detect when the body has children (i.e. graphic elements)
       // We can also use the 'load' event of the window/document inside the blob
+      
       const scriptToInject = `
         <script>
           window.addEventListener('load', () => {
@@ -120,6 +121,7 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
       } else {
         htmlContent += scriptToInject
       }
+       
 
       // Create a Blob URL for safer rendering
       const blob = new Blob([htmlContent], { type: 'text/html' })
@@ -156,19 +158,9 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
 
   return (
     <div className="relative w-full h-full">
-       {(!blobUrl || !isIframeLoaded) && (
-          <div className="absolute inset-0 z-10 bg-[#0a0b0f] flex flex-col items-center justify-center text-gray-400 p-4">
-            <div className="w-8 h-8 border-2 border-[#0061e8] border-t-transparent rounded-full animate-spin mb-3"></div>
-            <p className="text-xs font-medium">Designing UI...</p>
-            <p className="text-[10px] opacity-50 mt-2 text-center max-w-[200px] truncate">
-               {designHtml.length > 50 ? designHtml.substring(0, 50) + "..." : "Initializing..."}
-            </p>
-          </div>
-       )}
-       
        <iframe
         src={blobUrl || ''}
-        className={`w-full h-full border-0 transition-opacity duration-500 ${isIframeLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className="w-full h-full border-0"
         sandbox="allow-same-origin allow-scripts allow-forms"
         title="Design Preview"
       />
