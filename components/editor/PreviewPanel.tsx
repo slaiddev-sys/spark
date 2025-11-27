@@ -59,7 +59,9 @@ export default function PreviewPanel({ frames, selectedFrameId, onSelectFrame, d
         
         frames.forEach(frame => {
             if (!newPositions[frame.id]) {
-                newPositions[frame.id] = { x: maxX, y: 0 }
+                // Center frames vertically by using negative Y offset based on frame height
+                const height = frame.type === 'mobile' ? 812 : 800
+                newPositions[frame.id] = { x: maxX, y: -height / 2 }
                 const width = frame.type === 'mobile' ? 375 : 1280
                 maxX += width + 100
                 hasUpdates = true
