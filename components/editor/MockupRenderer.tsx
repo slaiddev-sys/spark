@@ -12,7 +12,6 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
   const [error, setError] = useState<string | null>(null)
 
   const [blobUrl, setBlobUrl] = useState<string | null>(null)
-  const [isContentVisible, setIsContentVisible] = useState(false)
 
   // Show locked state for premium frames
   if (locked) {
@@ -43,10 +42,7 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
 
   useEffect(() => {
     console.log("MockupRenderer received designHtml:", designHtml ? designHtml.substring(0, 50) + "..." : "null");
-    if (!designHtml) {
-      setIsContentVisible(false)
-      return
-    }
+    if (!designHtml) return
 
     try {
       // Try to extract HTML from code block if present
@@ -73,52 +69,10 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
         return
       }
 
-      // Inject script to detect when content is rendered
-      const scriptToInject = `
-        <script>
-          (function() {
-            function checkContent() {
-              const hasVisibleContent = document.body && (
-                document.body.children.length > 0 || 
-                document.body.innerText.trim().length > 0
-              );
-              
-              if (hasVisibleContent) {
-                window.parent.postMessage({ type: 'CONTENT_READY' }, '*');
-              }
-            }
-            
-            // Check immediately on load
-            window.addEventListener('load', checkContent);
-            
-            // Check on DOMContentLoaded
-            if (document.readyState === 'loading') {
-              document.addEventListener('DOMContentLoaded', checkContent);
-            } else {
-              checkContent();
-            }
-            
-            // Also observe for mutations in case content loads dynamically
-            const observer = new MutationObserver(checkContent);
-            if (document.body) {
-              observer.observe(document.body, { childList: true, subtree: true });
-            }
-          })();
-        </script>
-      `
-      
-      // Insert script before closing body tag or at the end
-      if (htmlContent.includes('</body>')) {
-        htmlContent = htmlContent.replace('</body>', scriptToInject + '</body>')
-      } else {
-        htmlContent += scriptToInject
-      }
-
       // Create a Blob URL for safer rendering
       const blob = new Blob([htmlContent], { type: 'text/html' })
       const url = URL.createObjectURL(blob)
       setBlobUrl(url)
-      setIsContentVisible(false) // Reset visibility when new content loads
       
       // Cleanup function
       return () => URL.revokeObjectURL(url)
@@ -127,18 +81,6 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
       console.error('Error rendering HTML:', err)
     }
   }, [designHtml])
-
-  // Listen for content ready message from iframe
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data && event.data.type === 'CONTENT_READY') {
-        setIsContentVisible(true)
-      }
-    }
-    
-    window.addEventListener('message', handleMessage)
-    return () => window.removeEventListener('message', handleMessage)
-  }, [])
 
   if (!designHtml) {
     return (
@@ -160,22 +102,12 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
   }
 
   return (
-    <div className="relative w-full h-full">
-      {/* Loading overlay - shown until content is visible */}
-      {!isContentVisible && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
-          <div className="w-8 h-8 border-2 border-[#0061e8] border-t-transparent rounded-full animate-spin mb-3"></div>
-          <p className="text-xs font-medium text-gray-600">Rendering UI...</p>
-        </div>
-      )}
-      
-      <iframe
-        ref={iframeRef}
-        src={blobUrl || ''}
-        className="w-full h-full border-0"
-        sandbox="allow-same-origin allow-scripts allow-forms"
-        title="Design Preview"
-      />
-    </div>
+    <iframe
+      ref={iframeRef}
+      src={blobUrl || ''}
+      className="w-full h-full border-0"
+      sandbox="allow-same-origin allow-scripts allow-forms"
+      title="Design Preview"
+    />
   )
 }
