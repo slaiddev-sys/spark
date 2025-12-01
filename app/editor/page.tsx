@@ -50,6 +50,7 @@ export default function EditorPage() {
   const [autoResumeData, setAutoResumeData] = useState<{message: string, image?: string} | null>(null)
   const [mobileView, setMobileView] = useState<'chat' | 'preview'>('chat')
   const [isPresentationMode, setIsPresentationMode] = useState(false)
+  const [isPricingModalOpen, setIsPricingModalOpen] = useState(false)
   const supabase = createClient()
   const router = useRouter()
 
@@ -444,6 +445,9 @@ export default function EditorPage() {
          content: '⚠️ Insufficient credits, Upgrade to get more credits'
        }])
        
+       // Open pricing modal immediately
+       setIsPricingModalOpen(true)
+       
        // On mobile, stay on chat tab to see the error message
        if (typeof window !== 'undefined' && window.innerWidth < 768) {
          setMobileView('chat')
@@ -822,6 +826,10 @@ export default function EditorPage() {
       
       if (errorMessage === 'Insufficient credits') {
         errorMessage = '⚠️ Insufficient credits, Upgrade to get more credits'
+        
+        // Open pricing modal for API streaming errors too
+        setIsPricingModalOpen(true)
+
         // Remove status message
         setMessages(prev => {
              const filtered = prev.filter(m => !(m.role === 'system' && m.content === 'Generating Request'))
@@ -941,6 +949,8 @@ export default function EditorPage() {
             onRenameProject={handleRenameProject}
             user={user}
             forcePresentationMode={typeof window !== 'undefined' && window.innerWidth < 768}
+            isPricingModalOpen={isPricingModalOpen}
+            setIsPricingModalOpen={setIsPricingModalOpen}
           />
         </div>
       </div>

@@ -23,9 +23,11 @@ interface PreviewPanelProps {
   onRenameProject: (projectId: string, newName: string) => void
   user: any
   forcePresentationMode?: boolean
+  isPricingModalOpen: boolean
+  setIsPricingModalOpen: (isOpen: boolean) => void
 }
 
-export default function PreviewPanel({ frames, selectedFrameId, onSelectFrame, deviceMode, onUndo, onRedo, canUndo, canRedo, projects, currentProject, onSelectProject, onCreateProject, onRenameProject, user, forcePresentationMode = false }: PreviewPanelProps) {
+export default function PreviewPanel({ frames, selectedFrameId, onSelectFrame, deviceMode, onUndo, onRedo, canUndo, canRedo, projects, currentProject, onSelectProject, onCreateProject, onRenameProject, user, forcePresentationMode = false, isPricingModalOpen, setIsPricingModalOpen }: PreviewPanelProps) {
   const [zoom, setZoom] = useState(50)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
@@ -76,9 +78,6 @@ export default function PreviewPanel({ frames, selectedFrameId, onSelectFrame, d
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false)
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
-
-  // Pricing Modal State
-  const [isPricingModalOpen, setIsPricingModalOpen] = useState(false)
 
   // Presentation Mode State
   const [isPresentationOpen, setIsPresentationOpen] = useState(false)
