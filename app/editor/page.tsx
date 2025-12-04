@@ -572,6 +572,21 @@ export default function EditorPage() {
             if (!cleanChunk) continue
         }
 
+        // Check for stream error
+        const errorMatch = chunk.match(/<!-- STREAM_ERROR: (.*?) -->/)
+        if (errorMatch) {
+            const errorMsg = errorMatch[1]
+            console.error('Stream Error detected:', errorMsg)
+            setMessages(prev => [...prev, { 
+                role: 'assistant', 
+                content: `❌ AI Error: ${errorMsg}`,
+                type: 'normal'
+            }])
+            // Stop processing this chunk as valid HTML
+            receivedHtml = '' // Clear content to avoid rendering the error as HTML
+            break // Stop stream processing
+        }
+
         // Check for credit deduction info
         const creditMatch = chunk.match(/<!-- CREDITS_DEDUCTED: (\d+) -->/)
         if (creditMatch) {
