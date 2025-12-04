@@ -65,6 +65,15 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
         // Only log if it's reasonably long and still no HTML, otherwise it's just starting
         if (htmlContent.length > 20) {
            console.log('Waiting for valid HTML...')
+           // If content is long but no HTML, display it as text error to debug
+           const errorBlob = new Blob([`<div style="padding: 20px; color: white; font-family: monospace; background: #1a1b1e; height: 100vh;">
+             <h3 style="color: #ff5555;">Rendering Error: No HTML found</h3>
+             <p>The AI returned text instead of code:</p>
+             <pre style="white-space: pre-wrap; color: #aaa; background: #000; padding: 10px; border-radius: 8px;">${htmlContent}</pre>
+           </div>`], { type: 'text/html' })
+           const errorUrl = URL.createObjectURL(errorBlob)
+           setBlobUrl(errorUrl)
+           return
         }
         return
       }

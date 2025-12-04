@@ -605,8 +605,17 @@ export default function EditorPage() {
         }
 
         // Parse matches for multi-frame generation
-        const codeBlockRegex = /```(?:\w*)\s*([\s\S]*?)(?:```|$)/g
-        const matches = [...receivedHtml.matchAll(codeBlockRegex)]
+        // Relaxed regex: capture code blocks OR if no code blocks, capture the whole text if it looks like HTML
+        let matches = [...receivedHtml.matchAll(/```(?:\w*)\s*([\s\S]*?)(?:```|$)/g)]
+        
+        // Fallback: if no code blocks found but text contains HTML tags, treat valid HTML parts as content
+        if (matches.length === 0 && (receivedHtml.includes('<html') || receivedHtml.includes('<!DOCTYPE') || receivedHtml.includes('<div'))) {
+             // Try to find the start of HTML
+             const htmlStart = receivedHtml.indexOf('<')
+             if (htmlStart >= 0) {
+                 matches = [[receivedHtml, receivedHtml.substring(htmlStart)]] as any
+             }
+        }
         
         // If we are in creation mode, we might need to add more frames
         if (!selectedFrameId) {
