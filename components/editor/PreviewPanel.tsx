@@ -47,40 +47,44 @@ export default function PreviewPanel({ frames, selectedFrameId, onSelectFrame, d
         const newPositions = { ...prev }
         let hasUpdates = false
         
-        // Find the right-most position to append new frames
-        let maxX = 0
-        
-        // Calculate occupied space based on existing positions
-        Object.keys(prev).forEach(id => {
-             const frame = frames.find(f => f.id === id)
-             if (frame) {
-                  const width = frame.type === 'mobile' ? 375 : 1280
-                  const rightEdge = prev[id].x + width + 100
-                  if (rightEdge > maxX) maxX = rightEdge
-             }
+        // 1. Find the right-most edge of currently positioned frames
+        let maxRightEdge = -Infinity
+        let hasPositionedFrames = false
+
+        // Check against existing frames in state to ensure we build upon valid positions
+        frames.forEach(frame => {
+            const pos = prev[frame.id]
+            if (pos) {
+                const width = frame.type === 'mobile' ? 375 : 1280
+                const edge = pos.x + width
+                if (edge > maxRightEdge) {
+                    maxRightEdge = edge
+                    hasPositionedFrames = true
+                }
+            }
         })
         
+        // 2. Position new frames
         frames.forEach(frame => {
             if (!newPositions[frame.id]) {
                 // Center frames vertically by using negative Y offset based on frame height
                 const height = frame.type === 'mobile' ? 812 : 800
                 const width = frame.type === 'mobile' ? 375 : 1280
                 
-                // Center frames horizontally relative to their slot by subtracting half width
-                // This ensures the first frame (at maxX=0) is centered on screen, not starting at center
-                // We apply an initial offset to move the first frame to the left side of the screen
-                // Increased to -600 to push it further left as requested
-                const initialOffset = Object.keys(prev).length === 0 ? -600 : 0
-                const xPos = (maxX === 0 && Object.keys(prev).length === 0) ? -600 : maxX
-
-                newPositions[frame.id] = { x: xPos - width / 2, y: -height / 2 }
+                let newX: number
                 
-                // If it was the first frame, we set maxX based on the offset
-                if (maxX === 0 && Object.keys(prev).length === 0) {
-                    maxX = xPos + width + 200
+                if (!hasPositionedFrames) {
+                    // First frame ever: Start at -600 (Left aligned)
+                    newX = -600
+                    hasPositionedFrames = true
+                    maxRightEdge = newX + width
                 } else {
-                    maxX += width + 200
+                    // Append after the last frame with 200px gap
+                    newX = maxRightEdge + 200
+                    maxRightEdge = newX + width
                 }
+
+                newPositions[frame.id] = { x: newX, y: -height / 2 }
                 hasUpdates = true
             }
         })
