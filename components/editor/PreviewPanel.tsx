@@ -637,12 +637,15 @@ export default function PreviewPanel({ frames, selectedFrameId, onSelectFrame, d
             {frames.map((frame) => {
               const isSelected = selectedFrameId === frame.id
               const pos = framePositions[frame.id] || { x: 0, y: 0 }
+              const isGenerating = !frame.content && !frame.locked
+
               return (
                 <div 
                   key={frame.id}
                   data-frame-id={frame.id}
-                  className={`bg-white shadow-2xl transition-shadow duration-300 ease-in-out absolute
+                  className={`bg-white shadow-2xl transition-all duration-300 ease-in-out absolute
                     ${isSelected ? 'ring-4 ring-blue-500 ring-offset-2 ring-offset-[#1a1b1e]' : ''}
+                    ${isGenerating ? 'shadow-[0_0_30px_rgba(91,124,250,0.6)] ring-2 ring-[#5b7cfa] ring-opacity-50 animate-pulse' : ''}
                   `}
                   style={{ 
                     width: frame.type === 'mobile' ? '375px' : '1280px',

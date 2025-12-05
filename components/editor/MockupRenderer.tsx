@@ -93,65 +93,16 @@ export default function MockupRenderer({ designHtml, locked = false }: MockupRen
 
   if (!designHtml) {
     return (
-      <div className="w-full h-full bg-[#1a1b1e] flex flex-col overflow-hidden">
-        {/* Skeleton UI Header */}
-        <div className="h-16 bg-[#2c2e33] w-full animate-pulse flex items-center px-4 border-b border-gray-800/50">
-           <div className="w-6 h-6 rounded-full bg-[#3f4148]"></div>
-           <div className="ml-4 h-4 w-32 bg-[#3f4148] rounded"></div>
-        </div>
-        
-        {/* Skeleton Content */}
-        <div className="flex-1 p-4 space-y-4">
-           {/* Hero / Banner */}
-           <div className="w-full h-48 bg-[#2c2e33] rounded-xl animate-pulse"></div>
-           
-           {/* Row of items */}
-           <div className="flex space-x-4">
-              <div className="w-1/3 h-24 bg-[#2c2e33] rounded-xl animate-pulse"></div>
-              <div className="w-1/3 h-24 bg-[#2c2e33] rounded-xl animate-pulse"></div>
-              <div className="w-1/3 h-24 bg-[#2c2e33] rounded-xl animate-pulse"></div>
-           </div>
-           
-           {/* List items */}
-           <div className="space-y-3 mt-4">
-              <div className="w-full h-12 bg-[#2c2e33] rounded-lg animate-pulse"></div>
-              <div className="w-full h-12 bg-[#2c2e33] rounded-lg animate-pulse"></div>
-              <div className="w-full h-12 bg-[#2c2e33] rounded-lg animate-pulse"></div>
-           </div>
-        </div>
+      <div className="w-full h-full bg-white animate-pulse">
+        {/* Blank white screen while loading */}
       </div>
     )
   }
 
   if (designHtml && !blobUrl) {
     return (
-      <div className="w-full h-full bg-[#1a1b1e] flex flex-col overflow-hidden">
-        {/* Skeleton UI Header */}
-        <div className="h-16 bg-[#2c2e33] w-full animate-pulse flex items-center px-4 border-b border-gray-800/50">
-           <div className="w-6 h-6 rounded-full bg-[#3f4148]"></div>
-           <div className="ml-4 h-4 w-32 bg-[#3f4148] rounded"></div>
-        </div>
-        
-        {/* Skeleton Content */}
-        <div className="flex-1 p-4 space-y-4">
-           {/* Hero / Banner */}
-           <div className="w-full h-48 bg-[#2c2e33] rounded-xl animate-pulse"></div>
-           
-           {/* Row of items */}
-           <div className="flex space-x-4">
-              <div className="w-1/3 h-24 bg-[#2c2e33] rounded-xl animate-pulse"></div>
-              <div className="w-1/3 h-24 bg-[#2c2e33] rounded-xl animate-pulse"></div>
-              <div className="w-1/3 h-24 bg-[#2c2e33] rounded-xl animate-pulse"></div>
-           </div>
-           
-           {/* List items */}
-           <div className="space-y-3 mt-4">
-              <div className="w-full h-12 bg-[#2c2e33] rounded-lg animate-pulse"></div>
-              <div className="w-full h-12 bg-[#2c2e33] rounded-lg animate-pulse"></div>
-              <div className="w-full h-12 bg-[#2c2e33] rounded-lg animate-pulse"></div>
-           </div>
-        </div>
-        {/* Overlay debug text if needed, but keeping it clean for now */}
+      <div className="w-full h-full bg-white animate-pulse">
+        {/* Blank white screen while loading */}
       </div>
     )
   }
