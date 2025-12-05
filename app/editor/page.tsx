@@ -531,6 +531,10 @@ export default function EditorPage() {
         .filter(m => m.role !== 'system')
         .map(m => ({ role: m.role, content: m.content, image: m.image }))
 
+      // Setup timeout for the request
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 90000) // 90s timeout for Gemini 3
+
       // Call streaming API
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -543,8 +547,11 @@ export default function EditorPage() {
           history: conversationHistory,
           deviceMode,
           currentDesign: currentDesignContent
-        })
+        }),
+        signal: controller.signal
       })
+      
+      clearTimeout(timeoutId)
 
       if (!response.ok || !response.body) {
         if (response.status === 402) {
@@ -848,7 +855,9 @@ export default function EditorPage() {
       
       let errorMessage = error.message || 'An unexpected error occurred.'
       
-      if (errorMessage === 'Insufficient credits') {
+      if (error.name === 'AbortError') {
+         errorMessage = '⏳ Gemini 3 Pro is taking too long to respond. Please try again later.'
+      } else if (errorMessage.includes('Insufficient credits')) {
         errorMessage = '⚠️ Insufficient credits, Upgrade to get more credits'
         
         // Open pricing modal for API streaming errors too
@@ -870,16 +879,17 @@ export default function EditorPage() {
       if (!errorMessage || errorMessage === 'Failed to fetch' || errorMessage === 'Failed to get streaming response from AI') {
          // Keep the user-friendly message but append the original error in console
          console.warn('Original error suppressed:', error.message)
-         errorMessage = '❌ Error: Could not connect to AI service. (Timeout or Network Issue)'
+         errorMessage = '❌ Error: Could not connect to Gemini 3 Pro API. Please try again.'
       }
 
       setMessages(prev => [...prev, { 
         role: 'assistant', 
         content: errorMessage
       }])
-      // Cleanup: remove the empty frame if it was new and failed?
+      
+      // Cleanup: remove the empty frame if it was new and failed
       if (!selectedFrameId && generatedFrameIds.length > 0) {
-        // setFrames(prev => prev.filter(f => !generatedFrameIds.includes(f.id)))
+        setFrames(prev => prev.filter(f => !generatedFrameIds.includes(f.id)))
       }
     } finally {
       setIsLoading(false)
