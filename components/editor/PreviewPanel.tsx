@@ -77,9 +77,9 @@ export default function PreviewPanel({ frames, selectedFrameId, onSelectFrame, d
                 
                 // If it was the first frame, we set maxX based on the offset
                 if (maxX === 0 && Object.keys(prev).length === 0) {
-                    maxX = xPos + width + 100
+                    maxX = xPos + width + 300
                 } else {
-                    maxX += width + 100
+                    maxX += width + 300
                 }
                 hasUpdates = true
             }
