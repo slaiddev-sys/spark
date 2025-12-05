@@ -608,14 +608,8 @@ export default function EditorPage() {
         if (errorMatch) {
             const errorMsg = errorMatch[1]
             console.error('Stream Error detected:', errorMsg)
-            setMessages(prev => [...prev, { 
-                role: 'assistant', 
-                content: `❌ AI Error: ${errorMsg}`,
-                type: 'normal'
-            }])
-            // Stop processing this chunk as valid HTML
-            receivedHtml = '' // Clear content to avoid rendering the error as HTML
-            break // Stop stream processing
+            // Throw error to trigger retry instead of just breaking
+            throw new Error(`Gemini API Error: ${errorMsg}`)
         }
 
         // Check for credit deduction info
@@ -703,7 +697,29 @@ export default function EditorPage() {
         }
       }
       
-      // Stream completed successfully, exit retry loop
+      // Validate that we received valid HTML content
+      console.log('Stream completed. Received HTML length:', receivedHtml.length)
+      console.log('First 200 chars:', receivedHtml.substring(0, 200))
+      
+      if (!receivedHtml || receivedHtml.trim().length === 0) {
+        throw new Error('Gemini 3 Pro returned empty response')
+      }
+      
+      // Check if we have actual HTML tags
+      const hasHtmlContent = receivedHtml.includes('<') && (
+        receivedHtml.includes('<html') || 
+        receivedHtml.includes('<!DOCTYPE') || 
+        receivedHtml.includes('<div') ||
+        receivedHtml.includes('<body')
+      )
+      
+      if (!hasHtmlContent) {
+        console.error('No valid HTML found in response:', receivedHtml)
+        throw new Error('Gemini 3 Pro response contains no valid HTML')
+      }
+      
+      // Stream completed successfully with valid content, exit retry loop
+      console.log('✅ Valid HTML received, exiting retry loop')
       break
           
         } catch (attemptError: any) {
@@ -919,7 +935,12 @@ export default function EditorPage() {
       if (!errorMessage || errorMessage === 'Failed to fetch' || errorMessage === 'Failed to get streaming response from AI') {
          // Keep the user-friendly message but append the original error in console
          console.warn('Original error suppressed:', error.message)
-         errorMessage = '❌ Error: Could not connect to Gemini 3 Pro API. Please try again.'
+         errorMessage = '❌ Gemini 3 Pro failed to generate valid designs after 3 attempts. Please try again.'
+      }
+      
+      // Specific messages for empty/invalid responses
+      if (errorMessage.includes('empty response') || errorMessage.includes('no valid HTML')) {
+         errorMessage = '❌ Gemini 3 Pro returned an invalid response after 3 attempts. Please try again with a different prompt.'
       }
 
       setMessages(prev => [...prev, { 
