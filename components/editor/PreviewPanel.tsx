@@ -69,8 +69,9 @@ export default function PreviewPanel({ frames, selectedFrameId, onSelectFrame, d
                 // Center frames horizontally relative to their slot by subtracting half width
                 // This ensures the first frame (at maxX=0) is centered on screen, not starting at center
                 // We apply an initial offset to move the first frame to the left side of the screen
-                const initialOffset = Object.keys(prev).length === 0 ? -400 : 0
-                const xPos = (maxX === 0 && Object.keys(prev).length === 0) ? -400 : maxX
+                // Increased to -600 to push it further left as requested
+                const initialOffset = Object.keys(prev).length === 0 ? -600 : 0
+                const xPos = (maxX === 0 && Object.keys(prev).length === 0) ? -600 : maxX
 
                 newPositions[frame.id] = { x: xPos - width / 2, y: -height / 2 }
                 
