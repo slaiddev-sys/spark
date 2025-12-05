@@ -535,6 +535,7 @@ export default function EditorPage() {
       const MAX_RETRIES = 3
       const TIMEOUT_MS = 120000 // 2 minutes timeout for Gemini 3 Pro
       let lastError: Error | null = null
+      let receivedHtml = '' // Declare here so it's accessible after the loop
 
       for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
@@ -585,7 +586,7 @@ export default function EditorPage() {
 
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
-      let receivedHtml = ''
+      receivedHtml = '' // Reset for this attempt
       let lastUpdateTime = 0
       const THROTTLE_MS = 50
 
