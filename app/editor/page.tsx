@@ -531,34 +531,57 @@ export default function EditorPage() {
         .filter(m => m.role !== 'system')
         .map(m => ({ role: m.role, content: m.content, image: m.image }))
 
-      // Setup timeout for the request
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 90000) // 90s timeout for Gemini 3
+      // RETRY LOGIC: Try up to 3 times with Gemini 3 Pro before giving up
+      const MAX_RETRIES = 3
+      const TIMEOUT_MS = 120000 // 2 minutes timeout for Gemini 3 Pro
+      let lastError: Error | null = null
 
-      // Call streaming API
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message,
-          image,
-          history: conversationHistory,
-          deviceMode,
-          currentDesign: currentDesignContent
-        }),
-        signal: controller.signal
-      })
-      
-      clearTimeout(timeoutId)
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          // Update status message for retries
+          if (attempt > 1) {
+            setMessages(prev => {
+              const filtered = prev.filter(m => !(m.role === 'system' && m.type === 'status'))
+              return [...filtered, { 
+                role: 'system', 
+                content: `🔄 Retrying Gemini 3 Pro... (Attempt ${attempt}/${MAX_RETRIES})`,
+                type: 'status',
+                loading: true
+              }]
+            })
+            
+            // Wait 2 seconds before retrying
+            await new Promise(resolve => setTimeout(resolve, 2000))
+          }
 
-      if (!response.ok || !response.body) {
-        if (response.status === 402) {
-             throw new Error('Insufficient credits')
-        }
-        throw new Error('Failed to get streaming response from AI')
-      }
+          // Setup timeout for the request
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS)
+
+          // Call streaming API
+          const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message,
+              image,
+              history: conversationHistory,
+              deviceMode,
+              currentDesign: currentDesignContent
+            }),
+            signal: controller.signal
+          })
+          
+          clearTimeout(timeoutId)
+
+          if (!response.ok || !response.body) {
+            if (response.status === 402) {
+                 throw new Error('Insufficient credits')
+            }
+            throw new Error('Failed to get streaming response from AI')
+          }
 
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
@@ -678,6 +701,22 @@ export default function EditorPage() {
             lastUpdateTime = now
         }
       }
+      
+      // Stream completed successfully, exit retry loop
+      break
+          
+        } catch (attemptError: any) {
+          lastError = attemptError
+          console.error(`Attempt ${attempt}/${MAX_RETRIES} failed:`, attemptError)
+          
+          // If this was the last attempt, throw the error to outer catch
+          if (attempt === MAX_RETRIES) {
+            throw lastError
+          }
+          
+          // Otherwise, loop will retry
+        }
+      } // End of retry loop
       
       // FINAL UPDATE after stream ends
       
