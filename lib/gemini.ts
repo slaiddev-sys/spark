@@ -70,20 +70,6 @@ export const getGeminiModel = () => {
   })
 }
 
-// Fallback model if primary is unavailable
-// Using Gemini 2.0 Flash as reliable fallback
-export const getFallbackModel = () => {
-  return genAI.getGenerativeModel({ 
-    model: 'gemini-2.0-flash-exp',
-    generationConfig: {
-      temperature: 1.0,
-      topK: 40,
-      topP: 0.95,
-      maxOutputTokens: 8192,
-    },
-  })
-}
-
 // System prompt for UI generation
 export const UI_GENERATION_PROMPT = (hasTrainingDesigns: boolean, deviceMode: 'mobile' | 'desktop', currentDesignContext: string | null, userTier: string = 'free') => `You are Spark AI, an expert UI/UX designer and developer. Your role is to help users create beautiful, modern, and functional user interfaces for apps and software.
 
@@ -228,44 +214,21 @@ export async function generateUIWithGeminiStream(
     }
 
     // Start a chat session with history
-    let chat
-    try {
-      chat = model.startChat({
-        history: [
-          {
-            role: 'user',
-            parts: systemPromptParts
-          },
-          {
-            role: 'model',
-            parts: [{ text: trainingDesigns.length > 0 
-              ? `Understood! I've analyzed ${trainingDesigns.length} reference design(s). I will generate HTML code that matches their exact style, colors, layouts, and quality. Ready to create beautiful designs!`
-              : 'Understood! I will generate HTML code for beautiful, modern UI designs. Ready to create!' }]
-          },
-          ...history
-        ]
-      })
-    } catch (error: any) {
-      console.error('Error initializing chat with Gemini 3:', error)
-      // If Gemini 3 fails, try fallback
-      console.log('Attempting fallback to Gemini 1.5 Pro...')
-      const fallbackModel = getFallbackModel()
-      chat = fallbackModel.startChat({
-        history: [
-          {
-            role: 'user',
-            parts: systemPromptParts
-          },
-          {
-            role: 'model',
-            parts: [{ text: trainingDesigns.length > 0 
-              ? `Understood! I've analyzed ${trainingDesigns.length} reference design(s). I will generate HTML code that matches their exact style, colors, layouts, and quality. Ready to create beautiful designs!`
-              : 'Understood! I will generate HTML code for beautiful, modern UI designs. Ready to create!' }]
-          },
-          ...history
-        ]
-      })
-    }
+    const chat = model.startChat({
+      history: [
+        {
+          role: 'user',
+          parts: systemPromptParts
+        },
+        {
+          role: 'model',
+          parts: [{ text: trainingDesigns.length > 0 
+            ? `Understood! I've analyzed ${trainingDesigns.length} reference design(s). I will generate HTML code that matches their exact style, colors, layouts, and quality. Ready to create beautiful designs!`
+            : 'Understood! I will generate HTML code for beautiful, modern UI designs. Ready to create!' }]
+        },
+        ...history
+      ]
+    })
 
     // Prepare the message parts
     let systemInstruction = deviceMode === 'desktop' 
@@ -291,38 +254,7 @@ export async function generateUIWithGeminiStream(
     }
 
     // Send stream request
-    let result
-    try {
-      result = await chat.sendMessageStream(messageParts)
-    } catch (error: any) {
-       console.error('Error sending message stream:', error)
-       
-       // Check for various error conditions to trigger fallback
-       const isOverloaded = error.message?.includes('503') || error.message?.includes('overloaded') || error.status === 503;
-       const isNotFound = error.message?.includes('404') || error.message?.includes('not found');
-       const isExhausted = error.message?.includes('Resource has been exhausted') || error.status === 429;
-
-       if (!chat || isNotFound || isExhausted || isOverloaded) {
-          console.log(`Attempting fallback to Gemini 1.5 Pro due to error: ${error.message}`)
-          const fallbackModel = getFallbackModel()
-          const fallbackChat = fallbackModel.startChat({
-            history: [
-              {
-                role: 'user',
-                parts: systemPromptParts
-              },
-              {
-                role: 'model',
-                parts: [{ text: 'Understood! I will generate HTML code for beautiful, modern UI designs. Ready to create!' }]
-              },
-              ...history
-            ]
-          })
-          result = await fallbackChat.sendMessageStream(messageParts)
-       } else {
-         throw error
-       }
-    }
+    const result = await chat.sendMessageStream(messageParts)
     
     return result // Return the full result object, not just result.stream
   } catch (error) {
