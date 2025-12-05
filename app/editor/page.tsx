@@ -905,6 +905,35 @@ export default function EditorPage() {
     }
   }
 
+  const handleDeleteProject = async (projectId: string) => {
+    // Optimistic update
+    const updatedProjects = projects.filter(p => p.id !== projectId)
+    setProjects(updatedProjects)
+    
+    // If deleting current project, switch to another one or create new
+    if (currentProject?.id === projectId) {
+      if (updatedProjects.length > 0) {
+        handleSelectProject(updatedProjects[0])
+      } else {
+        // Create a new default project if all deleted
+        // We'll let the useEffect handle creating a new one if list is empty?
+        // Better to create one explicitly here to avoid flickering
+        handleCreateProject()
+      }
+    }
+
+    // Database update
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', projectId)
+
+    if (error) {
+      console.error('Error deleting project:', error)
+      // Revert would be complex here, just log error for now
+    }
+  }
+
   if (!user) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-[#0a0b0f] text-white">
@@ -971,6 +1000,7 @@ export default function EditorPage() {
             onSelectProject={handleSelectProject}
             onCreateProject={handleCreateProject}
             onRenameProject={handleRenameProject}
+            onDeleteProject={handleDeleteProject}
             user={user}
             forcePresentationMode={typeof window !== 'undefined' && window.innerWidth < 768}
             isPricingModalOpen={isPricingModalOpen}
