@@ -35,7 +35,7 @@ const pricingTiers: PricingTier[] = [
   },
   {
     name: 'Starter',
-    monthlyPrice: '$14.99',
+    monthlyPrice: '$9.99',
     yearlyPrice: '$9',
     originalPrice: '$30',
     originalMonthlyPrice: '$29.99',
